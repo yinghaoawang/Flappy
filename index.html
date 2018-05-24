@@ -6,6 +6,44 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
     </head>
     <body>
+        <h1>Hello</h1>
+        <script>
+            class Bird extends PIXI.Sprite {
+                constructor(x, y) {
+                    super(new PIXI.Texture.fromImage('bird.png'));
+                    this.x = x;
+                    this.y = y;
+                    this.width = 30;
+                    this.height = 30;
+                    this.xv = 1;
+                    this.yv = 0;
+                }
+                step() {
+                    this.x += this.xv;
+                    this.yv += .01;
+                    this.y += this.yv;
+                }
+                jump() {
+                    this.yvel = 20;
+                }
+            }
+        </script>
+         
+        <script>
+            const app = new PIXI.Application();
+            document.body.appendChild(app.view);
+            let bird;
+            init();
 
+            function init() {
+                bird = new Bird(10, 20);
+                app.stage.addChild(bird);
+                app.ticker.add(delta => step(delta));
+            }
+
+            function step(delta) {
+                bird.step();
+            }
+        </script>
     </body>
 </html>
