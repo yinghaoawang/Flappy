@@ -1,49 +1,112 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>title</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
-    </head>
-    <body>
-        <h1>Hello</h1>
-        <script>
-            class Bird extends PIXI.Sprite {
-                constructor(x, y) {
-                    super(new PIXI.Texture.fromImage('bird.png'));
-                    this.x = x;
-                    this.y = y;
-                    this.width = 30;
-                    this.height = 30;
-                    this.xv = 1;
-                    this.yv = 0;
+
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
+</head>
+
+<body>
+    <h1>Hello</h1>
+    <script>
+        // Code provided by kittykatattack
+        function keyboard(keyCode) {
+            let key = {};
+            key.code = keyCode;
+            key.isDown = false;
+            key.isUp = true;
+            key.press = undefined;
+            key.release = undefined;
+            //The `downHandler`
+            key.downHandler = event => {
+                if (event.keyCode === key.code) {
+                    if (key.isUp && key.press) key.press();
+                    key.isDown = true;
+                    key.isUp = false;
                 }
-                step() {
-                    this.x += this.xv;
-                    this.yv += .01;
-                    this.y += this.yv;
+                event.preventDefault();
+            };
+
+            //The `upHandler`
+            key.upHandler = event => {
+                if (event.keyCode === key.code) {
+                    if (key.isDown && key.release) key.release();
+                    key.isDown = false;
+                    key.isUp = true;
                 }
-                jump() {
-                    this.yvel = 20;
-                }
+                event.preventDefault();
+            };
+
+            //Attach event listeners
+            window.addEventListener(
+                "keydown", key.downHandler.bind(key), false
+            );
+            window.addEventListener(
+                "keyup", key.upHandler.bind(key), false
+            );
+            return key;
+        }
+    </script>
+    <script>
+        class Bird extends PIXI.Sprite {
+            constructor(x, y) {
+                super(new PIXI.Texture.fromImage('bird.png'));
+                this.x = x;
+                this.y = y;
+                this.width = 30;
+                this.height = 30;
+                this.xv = 2;
+                this.yv = 0;
             }
-        </script>
-         
-        <script>
-            const app = new PIXI.Application();
-            document.body.appendChild(app.view);
-            let bird;
+            step() {
+                this.x += this.xv;
+                if (this.yv <= 4)
+                    this.yv += .1;
+                this.y += this.yv;
+            }
+            jump() {
+                console.log("j");
+                this.yv = -4;
+            }
+        }
+    </script>
+
+    <script>
+        const app = new PIXI.Application();
+        document.body.appendChild(app.view);
+        let rkey = keyboard(82),
+        spacekey = keyboard(32);
+        let bird = null;
+        init();
+
+        function init() {
+            bird = new Bird(10, 20);
+            app.stage.addChild(bird);
+            app.ticker.add(delta => step(delta));
+            app.ticker.start();
+            
+            spacekey.press = () => bird.jump();
+            rkey.press = () => reset();
+        }
+
+        function step(delta) {
+            bird.step();
+        }
+
+        function reset() {
+            console.log("r");
+            app.stage.removeChild(bird);
+            app.ticker.stop();
+            app.ticker = null;
+            app.ticker = new PIXI.ticker.Ticker();
+            bird = null;
+            spacekey.press = null;
+            rkey.press = null;
+            
             init();
+        }
+    </script>
+</body>
 
-            function init() {
-                bird = new Bird(10, 20);
-                app.stage.addChild(bird);
-                app.ticker.add(delta => step(delta));
-            }
-
-            function step(delta) {
-                bird.step();
-            }
-        </script>
-    </body>
 </html>
