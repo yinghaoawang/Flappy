@@ -9,68 +9,8 @@
 
 <body>
     <h1>Hello</h1>
-    <script>
-        // Code provided by kittykatattack
-        function keyboard(keyCode) {
-            let key = {};
-            key.code = keyCode;
-            key.isDown = false;
-            key.isUp = true;
-            key.press = undefined;
-            key.release = undefined;
-            //The `downHandler`
-            key.downHandler = event => {
-                if (event.keyCode === key.code) {
-                    if (key.isUp && key.press) key.press();
-                    key.isDown = true;
-                    key.isUp = false;
-                }
-                event.preventDefault();
-            };
-
-            //The `upHandler`
-            key.upHandler = event => {
-                if (event.keyCode === key.code) {
-                    if (key.isDown && key.release) key.release();
-                    key.isDown = false;
-                    key.isUp = true;
-                }
-                event.preventDefault();
-            };
-
-            //Attach event listeners
-            window.addEventListener(
-                "keydown", key.downHandler.bind(key), false
-            );
-            window.addEventListener(
-                "keyup", key.upHandler.bind(key), false
-            );
-            return key;
-        }
-    </script>
-    <script>
-        class Bird extends PIXI.Sprite {
-            constructor(x, y) {
-                super(new PIXI.Texture.fromImage('bird.png'));
-                this.x = x;
-                this.y = y;
-                this.width = 30;
-                this.height = 30;
-                this.xv = 2;
-                this.yv = 0;
-            }
-            step() {
-                this.x += this.xv;
-                if (this.yv <= 4)
-                    this.yv += .1;
-                this.y += this.yv;
-            }
-            jump() {
-                console.log("j");
-                this.yv = -4;
-            }
-        }
-    </script>
+    <script src="keyboard.js"></script>
+    <script src="bird.js"></script>
 
     <script>
         const app = new PIXI.Application();
