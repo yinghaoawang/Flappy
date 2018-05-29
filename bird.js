@@ -1,9 +1,9 @@
-var BIRDWIDTH = 20;
-var BIRDHEIGHT = 20;
-var BIRDXV = 2;
-var GRAVITY = .5;
-var BIRDMAXYV = 4;
-var BIRDJUMPV = -10;
+let BIRDWIDTH = 20;
+let BIRDHEIGHT = 20;
+let BIRDXV = 2;
+let GRAVITY = .5;
+let BIRDMAXYV = 4;
+let BIRDJUMPV = -10;
 
 class Bird extends PIXI.Sprite {
     constructor(x, y) {

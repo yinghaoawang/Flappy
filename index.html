@@ -11,17 +11,46 @@
     <h1>Hello</h1>
     <script src="keyboard.js"></script>
     <script src="bird.js"></script>
+    <script>
+        let WALLWIDTH = 30;
+        let WALLGAPHEIGHT= 140;
+        let APPWIDTH = 800;
+        let APPHEIGHT = 600;
+        class Wall extends PIXI.Container {
+            constructor(x, gy) {
+                super();
+                this.x = x;
+                this.y = 0;
+                this.topwall = new PIXI.Sprite(new PIXI.Texture.fromImage("wall.png"));
+                this.bottomwall = new PIXI.Sprite(new PIXI.Texture.fromImage("wall.png"));
+                this.topwall.width = this.bottomwall.width = WALLWIDTH;
+                this.topwall.height = gy - WALLGAPHEIGHT;
+
+                this.bottomwall.y = gy;
+                this.bottomwall.height = APPHEIGHT - gy;
+                this.addChild(this.topwall);
+                this.addChild(this.bottomwall);
+            }
+        }
+    </script>
 
     <script>
-        const app = new PIXI.Application();
+        const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
         document.body.appendChild(app.view);
         let rkey = keyboard(82),
         spacekey = keyboard(32);
         let bird = null;
+        let walls = [];
         init();
 
         function init() {
             bird = new Bird(10, 20);
+            let wall1 = new Wall(200, 200);
+            walls.push(wall1);
+            walls.forEach(wall => {
+                app.stage.addChild(wall);
+            });
+
             app.stage.addChild(bird);
             app.ticker.add(delta => step(delta));
             app.ticker.start();
@@ -41,6 +70,7 @@
             app.ticker = null;
             app.ticker = new PIXI.ticker.Ticker();
             bird = null;
+            walls.length = 0;
             spacekey.press = null;
             rkey.press = null;
             
