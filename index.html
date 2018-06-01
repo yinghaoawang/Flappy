@@ -16,13 +16,36 @@
         let WALLGAPHEIGHT= 140;
         let APPWIDTH = 800;
         let APPHEIGHT = 600;
-        class Wall extends PIXI.Container {
+
+        function rectInRect(ax1, ax2, ay1, ay2, bx1, bx2, by1, by2) {
+            return (ax1 < bx2 && ax2 > bx1 && ay1 > by2 && ay2 < by1)
+                || (ax1 > bx2 && ax2 < bx1 && ay1 < by2 && ay2 > by1);
+        }
+
+        class MultiPart extends PIXI.Container {
+            constructor() {
+                super();
+                this.parts = [];
+            }
+            collidesWith(x, y, width, height) {
+                this.parts.forEach(part => {
+                    console.log(part);
+                });
+            }
+        }
+        class Wall extends MultiPart {
+            // constructor for the x position and gap starting y position
             constructor(x, gy) {
                 super();
+                
                 this.x = x;
                 this.y = 0;
                 this.topwall = new PIXI.Sprite(new PIXI.Texture.fromImage("wall.png"));
                 this.bottomwall = new PIXI.Sprite(new PIXI.Texture.fromImage("wall.png"));
+
+                this.parts.push(this.topwall);
+                this.parts.push(this.bottomwall);
+
                 this.topwall.width = this.bottomwall.width = WALLWIDTH;
                 this.topwall.height = gy - WALLGAPHEIGHT;
 
@@ -46,6 +69,7 @@
         function init() {
             bird = new Bird(10, 20);
             let wall1 = new Wall(200, 200);
+            wall1.collidesWith(1, 2, 3, 4);
             walls.push(wall1);
             walls.forEach(wall => {
                 app.stage.addChild(wall);
@@ -54,7 +78,7 @@
             app.stage.addChild(bird);
             app.ticker.add(delta => step(delta));
             app.ticker.start();
-            
+
             spacekey.press = () => bird.jump();
             rkey.press = () => reset();
         }
