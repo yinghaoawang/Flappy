@@ -14,6 +14,7 @@ class Bird extends PIXI.Sprite {
         this.height = BIRDHEIGHT;
         this.xv = BIRDXV;
         this.yv = 0;
+       
     }
     step() {
         this.x += this.xv;
@@ -23,6 +24,7 @@ class Bird extends PIXI.Sprite {
             this.yv = BIRDMAXYV;
         }
         this.y += this.yv;
+        //console.log(this.getBounds());
     }
     jump() {
         console.log("j");

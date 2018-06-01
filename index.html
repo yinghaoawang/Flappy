@@ -18,8 +18,8 @@
         let APPHEIGHT = 600;
 
         function rectInRect(ax1, ax2, ay1, ay2, bx1, bx2, by1, by2) {
-            return (ax1 < bx2 && ax2 > bx1 && ay1 > by2 && ay2 < by1)
-                || (ax1 > bx2 && ax2 < bx1 && ay1 < by2 && ay2 > by1);
+            return (ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1)
+                || (ax1 > bx2 && ax2 < bx1 && ay1 > by2 && ay2 < by1);
         }
 
         class MultiPart extends PIXI.Container {
@@ -27,10 +27,26 @@
                 super();
                 this.parts = [];
             }
-            collidesWith(x, y, width, height) {
+
+            collidesWithRect(x, y, width, height) {
+                let x2 = x + width;
+                let y2 = y + height;
                 this.parts.forEach(part => {
-                    console.log(part);
+                    let px1 = part.x + this.x;
+                    let px2 = px1 + part.width;
+                    let py1 = part.y + this.y;
+                    let py2 = py1 + part.height;
+                    //console.log(x, x2, y, y2, px1, px2, py1, py2);
+                    if (rectInRect(x, x2, y, y2, px1, px2, py1, py2)) {
+                        console.log("tru");
+                        return true;
+                    }
                 });
+                return false;
+            }
+
+            collidesWithObj(obj) {
+                return this.collidesWithRect(obj.x, obj.y, obj.width, obj.height);
             }
         }
         class Wall extends MultiPart {
@@ -69,7 +85,6 @@
         function init() {
             bird = new Bird(10, 20);
             let wall1 = new Wall(200, 200);
-            wall1.collidesWith(1, 2, 3, 4);
             walls.push(wall1);
             walls.forEach(wall => {
                 app.stage.addChild(wall);
@@ -85,6 +100,11 @@
 
         function step(delta) {
             bird.step();
+            walls.forEach(wall => {
+                if (wall.collidesWithObj(bird)) {
+                    console.log("did");
+                }
+            })
         }
 
         function reset() {
