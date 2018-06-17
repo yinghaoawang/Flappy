@@ -99,6 +99,11 @@
                 "y": coords.y - (object.height / 2)
             };
         }
+
+        function is_on_stage(stage, object) {
+            return object.x > (stage.pivot.x - stage.x) &&
+                object.x < (stage.pivot.x + stage.x);
+        }
     </script>
 
     <script>
@@ -143,13 +148,22 @@
             });
         }
 
+        function remove_object(object) {
+            
+        }
+
         function step(delta) {
             bird.step();
+            app.stage.pivot.x = bird.x + 290;
+            app.stage.x = app.renderer.width / 2;
             walls.forEach(wall => {
                 if (wall.collidesWithObj(bird)) {
                     let centered_pos = get_centered_pos(rect_gfx, wall.get_gap_bottom());
-                    rect_gfx.x = centered_pos.x;
+                    rect_gfx.x = 750 + centered_pos.x;
                     rect_gfx.y = centered_pos.y;
+                }
+                if (!is_on_stage(app.stage, wall)) {
+                    remove_object(wall);
                 }
             })
         }
