@@ -13,7 +13,7 @@
     <script src="bird.js"></script>
     <script>
         let WALLWIDTH = 30;
-        let WALLGAPHEIGHT= 140;
+        let WALLGAPHEIGHT = 140;
         let APPWIDTH = 800;
         let APPHEIGHT = 600;
 
@@ -23,12 +23,15 @@
         }
 
         class MultiPart extends PIXI.Container {
-            constructor() {
+            constructor(x, y) {
                 super();
+                this.x = x;
+                this.y = y;
                 this.parts = [];
             }
 
             collidesWithRect(x, y, width, height) {
+                let collided = false;
                 let x2 = x + width;
                 let y2 = y + height;
                 this.parts.forEach(part => {
@@ -36,40 +39,65 @@
                     let px2 = px1 + part.width;
                     let py1 = part.y + this.y;
                     let py2 = py1 + part.height;
-                    //console.log(x, x2, y, y2, px1, px2, py1, py2);
                     if (rectInRect(x, x2, y, y2, px1, px2, py1, py2)) {
-                        console.log("tru");
-                        return true;
+                        collided = true;
                     }
                 });
-                return false;
+                return collided;
             }
 
             collidesWithObj(obj) {
                 return this.collidesWithRect(obj.x, obj.y, obj.width, obj.height);
             }
         }
+
         class Wall extends MultiPart {
             // constructor for the x position and gap starting y position
             constructor(x, gy) {
-                super();
-                
-                this.x = x;
-                this.y = 0;
+                super(x, 0);
                 this.topwall = new PIXI.Sprite(new PIXI.Texture.fromImage("wall.png"));
                 this.bottomwall = new PIXI.Sprite(new PIXI.Texture.fromImage("wall.png"));
 
                 this.parts.push(this.topwall);
                 this.parts.push(this.bottomwall);
 
-                this.topwall.width = this.bottomwall.width = WALLWIDTH;
+                this.topwall.x = 0;
+                this.topwall.y = 0;
+                this.topwall.width = WALLWIDTH;
                 this.topwall.height = gy - WALLGAPHEIGHT;
 
+                this.bottomwall.x = 0;
                 this.bottomwall.y = gy;
+                this.bottomwall.width = WALLWIDTH;
                 this.bottomwall.height = APPHEIGHT - gy;
                 this.addChild(this.topwall);
                 this.addChild(this.bottomwall);
             }
+
+            /* Returns x and y coords of the top of the gap, where the gap ends */
+            get_gap_top() {
+                return {
+                    "x": this.topwall.x + this.x +this.topwall.width,
+                    "y": this.topwall.y + this.y + this.topwall.height
+                };
+            }
+
+            /* Returns x and y coords of the bottom of the gap, where the gap ends */
+            get_gap_bottom() {
+                return {
+                    "x": this.bottomwall.x + this.x + this.bottomwall.width,
+                    "y": this.bottomwall.y + this.y
+                }
+            }
+        }
+    </script>
+
+    <script>
+        function get_centered_pos(object, coords) {
+            return {
+                "x": coords.x - (object.width / 2),
+                "y": coords.y - (object.height / 2)
+            };
         }
     </script>
 
@@ -77,9 +105,17 @@
         const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
         document.body.appendChild(app.view);
         let rkey = keyboard(82),
-        spacekey = keyboard(32);
+            spacekey = keyboard(32);
+            
+        
         let bird = null;
+        let rect_gfx = null;
         let walls = [];
+        let stage_objects = [];
+        let object_arrays = [
+            walls,
+            stage_objects
+        ];
         init();
 
         function init() {
@@ -87,37 +123,52 @@
             let wall1 = new Wall(200, 200);
             walls.push(wall1);
             walls.forEach(wall => {
-                app.stage.addChild(wall);
+                stage_objects.push(wall);
             });
-
-            app.stage.addChild(bird);
             app.ticker.add(delta => step(delta));
             app.ticker.start();
 
             spacekey.press = () => bird.jump();
             rkey.press = () => reset();
+
+            rect_gfx = new PIXI.Graphics;
+            rect_gfx.beginFill(0x0000FF);
+            rect_gfx.drawRect(0, 0, 10, 10);
+
+            stage_objects.push(bird);
+            stage_objects.push(rect_gfx);
+
+            stage_objects.forEach((obj) => {
+                app.stage.addChild(obj);
+            });
         }
 
         function step(delta) {
             bird.step();
             walls.forEach(wall => {
                 if (wall.collidesWithObj(bird)) {
-                    console.log("did");
+                    let centered_pos = get_centered_pos(rect_gfx, wall.get_gap_bottom());
+                    rect_gfx.x = centered_pos.x;
+                    rect_gfx.y = centered_pos.y;
                 }
             })
         }
 
         function reset() {
             console.log("r");
-            app.stage.removeChild(bird);
+            stage_objects.forEach(obj => {
+                app.stage.removeChild(obj);
+            });
+            object_arrays.forEach(arr => {
+                arr.length = 0;
+            });
+
             app.ticker.stop();
             app.ticker = null;
             app.ticker = new PIXI.ticker.Ticker();
-            bird = null;
-            walls.length = 0;
             spacekey.press = null;
             rkey.press = null;
-            
+
             init();
         }
     </script>
