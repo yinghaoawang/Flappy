@@ -3,123 +3,21 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>title</title>
+    <title>Flappy brick</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js"></script>
 </head>
 
 <body>
     <h1>Hello</h1>
-    <script src="keyboard.js"></script>
+    
     <script src="MultiPart.js"></script>
     <script src="Bird.js"></script>
     <script src="Wall.js"></script>
-    <script>
-        // consts & util functions
-        let WALLWIDTH = 30;
-        let WALLGAPHEIGHT = 140;
-        let APPWIDTH = 800;
-        let APPHEIGHT = 600;
+    <script src="WallManager.js"></script>
 
-        function rectInRect(ax1, ax2, ay1, ay2, bx1, bx2, by1, by2) {
-            return (ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1)
-                || (ax1 > bx2 && ax2 < bx1 && ay1 > by2 && ay2 < by1);
-        }
-    </script>
-
-    <script>
-        function get_centered_pos(object, coords) {
-            return {
-                "x": coords.x - (object.width / 2),
-                "y": coords.y - (object.height / 2)
-            };
-        }
-
-        function is_on_stage(stage, object) {
-            return object.x > (stage.pivot.x - stage.x) &&
-                object.x < (stage.pivot.x + stage.x);
-        }
-    </script>
-
-    <script>
-        const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
-        document.body.appendChild(app.view);
-        let rkey = keyboard(82),
-            spacekey = keyboard(32);
-            
-        
-        let bird = null;
-        let rect_gfx = null;
-        let walls = [];
-        let stage_objects = [];
-        let object_arrays = [
-            walls,
-            stage_objects
-        ];
-        init();
-
-        function init() {
-            app.stage.x = app.renderer.width / 2;
-            bird = new Bird(10, 20);
-            let wall1 = new Wall(200, 200);
-            walls.push(wall1);
-            walls.forEach(wall => {
-                stage_objects.push(wall);
-            });
-            app.ticker.add(delta => step(delta));
-            app.ticker.start();
-
-            spacekey.press = () => bird.jump();
-            rkey.press = () => reset();
-
-            rect_gfx = new PIXI.Graphics;
-            rect_gfx.beginFill(0x0000FF);
-            rect_gfx.drawRect(0, 0, 10, 10);
-
-            stage_objects.push(bird);
-            stage_objects.push(rect_gfx);
-
-            stage_objects.forEach((obj) => {
-                app.stage.addChild(obj);
-            });
-        }
-
-        function remove_object(object) {
-            
-        }
-
-        function step(delta) {
-            bird.step();
-            app.stage.pivot.x = bird.x + 290;
-            
-            walls.forEach(wall => {
-                if (wall.collidesWithObj(bird)) {
-                    let centered_pos = get_centered_pos(rect_gfx, wall.get_gap_bottom());
-                    rect_gfx.x = 750 + centered_pos.x;
-                    rect_gfx.y = centered_pos.y;
-                }
-                if (!is_on_stage(app.stage, wall)) {
-                    remove_object(wall);
-                }
-            })
-        }
-
-        function reset() {
-            stage_objects.forEach(obj => {
-                app.stage.removeChild(obj);
-            });
-            object_arrays.forEach(arr => {
-                arr.length = 0;
-            });
-
-            app.ticker.stop();
-            app.ticker = null;
-            app.ticker = new PIXI.ticker.Ticker();
-            spacekey.press = null;
-            rkey.press = null;
-
-            init();
-        }
-    </script>
+    <script src="keyboard.js"></script>
+    <script src="util.js"></script>
+    <script src="flappy_game.js"></script>
 </body>
 
 </html>
