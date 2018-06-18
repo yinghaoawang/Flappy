@@ -1,7 +1,7 @@
 // consts
 const WALLWIDTH = 30;
 const WALLGAPHEIGHT = 140;
-const WALLXINTERVAL = 200;
+const WALLXINTERVAL = 1200;
 const WALLINITIALX = 200;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
@@ -42,7 +42,10 @@ function init() {
   target_marker.drawRect(0, 0, 5, 5);
   stage_objects.push(target_marker);
 
-  let centered_pos = get_centered_pos(target_marker, target_wall.get_gap_bottom());
+  let centered_pos = get_centered_pos(
+    target_marker,
+    target_wall.get_gap_bottom()
+  );
   target_marker.x = centered_pos.x;
   target_marker.y = centered_pos.y;
 
@@ -58,36 +61,46 @@ function get_random_gap() {
 function step(delta) {
   bird.step();
   app.stage.pivot.x = bird.x + 290;
+  if (bird.y + bird.height > APPHEIGHT) console.log("dead");
   let rando = get_random_gap();
   if ((app.stage.pivot.x + app.stage.x + WALLINITIALX) % WALLXINTERVAL == 0) {
     wall_man.add_wall(app.stage.pivot.x + app.stage.x, rando);
+     console.log(wall_man.walls);
   }
 
   let wall = wall_man.get_wall(0);
   if (wall && wall.collidesWithObj(bird)) {
     console.log("dead");
   }
-  if (wall && !is_on_stage(app.stage, wall)) {
+  if (wall && !is_on_stage(app.stage, wall) && wall_man.size() > 1) {
     wall_man.remove_wall(0);
   }
 
-  if (target_wall && bird.x > (target_wall.x + target_wall.width)) {
+  let is_bird_pass_target_wall =
+    target_wall && bird.x > target_wall.x + target_wall.width;
+
+  if (!target_wall || is_bird_pass_target_wall) {
     target_wall = get_next_object_ahead(bird, wall_man.walls);
-    let centered_pos = get_centered_pos(target_marker, target_wall.get_gap_bottom());
-    target_marker.x = centered_pos.x;
-    target_marker.y = centered_pos.y;
+    if (target_wall) {
+      centered_pos = get_centered_pos(
+        target_marker,
+        target_wall.get_gap_bottom()
+      );
+      target_marker.x = centered_pos.x;
+      target_marker.y = centered_pos.y;
+    }
   }
 }
 
 function get_next_object_ahead(object, array) {
-    let res = null;
-    array.forEach(o => {
-        if (res == null && object.x < (o.x + o.width)) {
-            res = o;
-            console.log(o);
-        }
-    });
-    return res;
+  let res = null;
+  array.forEach(o => {
+    if (res == null && object.x < o.x + o.width) {
+      res = o;
+      console.log(o);
+    }
+  });
+  return res;
 }
 
 function reset() {
