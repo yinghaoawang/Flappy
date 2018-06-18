@@ -12,7 +12,7 @@ let rkey = keyboard(82),
   spacekey = keyboard(32);
 
 let bird = null;
-let rect_gfx = null;
+let target_marker = null;
 let wall_man = new WallManager(app.stage);
 let target_wall = null;
 let stage_objects = [];
@@ -27,7 +27,7 @@ function init() {
   spacekey.press = () => bird.jump();
   rkey.press = () => reset();
 
-  bird = new Bird(10, 20);
+  bird = new Bird(10, APPHEIGHT / 4);
   stage_objects.push(bird);
 
   let end_of_stage = APPWIDTH;
@@ -37,14 +37,14 @@ function init() {
   }
   target_wall = wall_man.get_wall(0);
 
-  rect_gfx = new PIXI.Graphics();
-  rect_gfx.beginFill(0x0000ff);
-  rect_gfx.drawRect(0, 0, 10, 10);
-  stage_objects.push(rect_gfx);
+  target_marker = new PIXI.Graphics();
+  target_marker.beginFill(0x0000ff);
+  target_marker.drawRect(0, 0, 5, 5);
+  stage_objects.push(target_marker);
 
-  let centered_pos = get_centered_pos(rect_gfx, target_wall.get_gap_bottom());
-  rect_gfx.x = centered_pos.x;
-  rect_gfx.y = centered_pos.y;
+  let centered_pos = get_centered_pos(target_marker, target_wall.get_gap_bottom());
+  target_marker.x = centered_pos.x;
+  target_marker.y = centered_pos.y;
 
   stage_objects.forEach(obj => {
     app.stage.addChild(obj);
@@ -71,27 +71,24 @@ function step(delta) {
     wall_man.remove_wall(0);
   }
 
-  /* TODO
-  if (target_wall && bird.x > target_wall.x + target_wall.width) {
+  if (target_wall && bird.x > (target_wall.x + target_wall.width)) {
     target_wall = get_next_object_ahead(bird, wall_man.walls);
-    let centered_pos = get_centered_pos(rect_gfx, target_wall.get_gap_bottom());
-    rect_gfx.x = centered_pos.x;
-    rect_gfx.y = centered_pos.y;
+    let centered_pos = get_centered_pos(target_marker, target_wall.get_gap_bottom());
+    target_marker.x = centered_pos.x;
+    target_marker.y = centered_pos.y;
   }
-  */
 }
 
-/* TODO
 function get_next_object_ahead(object, array) {
     let res = null;
     array.forEach(o => {
-        if (res == null && object.x > (o.x + o.width)) {
+        if (res == null && object.x < (o.x + o.width)) {
             res = o;
+            console.log(o);
         }
     });
     return res;
 }
-*/
 
 function reset() {
   for (let i = 0; i < stage_objects.length; ++i) {
