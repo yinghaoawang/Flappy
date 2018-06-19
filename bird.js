@@ -25,14 +25,12 @@ class Bird extends PIXI.Sprite {
             this.yv = BIRDMAXYV;
         }
         this.y += this.yv;
-        //console.log(this.getBounds());
     }
     kill() {
         this.setTexture(new PIXI.Texture.fromImage('dead-bird.png'));
         this.alive = false;
     }
     jump() {
-        console.log("j");
         this.yv = BIRDJUMPV;
     }
 }

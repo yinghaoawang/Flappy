@@ -40,7 +40,6 @@ function init() {
     let rando = get_random_gap();
     wall_man.add_wall(i, rando);
   }
-  console.log(wall_man.walls);
   target_wall = wall_man.get_wall(0);
 
   target_marker = new PIXI.Graphics();
@@ -67,10 +66,12 @@ function get_random_gap() {
 }
 
 function step(delta) {
-  if (bird.alive) {
-    bird.step();
-    app.stage.pivot.x = bird.x + 290;
+  if (!bird.alive) {
+    return;
   }
+  bird.step();
+  app.stage.pivot.x = bird.x + 290;
+
   if (bird.y + bird.height > APPHEIGHT) {
     console.log("dead");
     bird.kill();
