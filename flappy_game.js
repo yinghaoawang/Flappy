@@ -1,8 +1,8 @@
 // consts
 const WALLWIDTH = 30;
 const WALLGAPHEIGHT = 140;
-const WALLXINTERVAL = 400;
-const WALLINITIALX = 100;
+const WALLXINTERVAL = 300;
+const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
 
@@ -32,10 +32,15 @@ function init() {
 
   app.stage.pivot.x = bird.x + 290;
   let end_of_stage = app.stage.pivot.x + app.stage.x + WALLINITIALX;
-  for (let i = WALLINITIALX; i <= end_of_stage; i += WALLXINTERVAL) {
+  for (
+    let i = WALLINITIALX;
+    i < end_of_stage - WALLXINTERVAL;
+    i += WALLXINTERVAL
+  ) {
     let rando = get_random_gap();
     wall_man.add_wall(i, rando);
   }
+  console.log(wall_man.walls);
   target_wall = wall_man.get_wall(0);
 
   target_marker = new PIXI.Graphics();
@@ -62,11 +67,16 @@ function get_random_gap() {
 }
 
 function step(delta) {
-    
-  bird.step();
-  app.stage.pivot.x = bird.x + 290;
-  if (bird.y + bird.height > APPHEIGHT) console.log("dead");
-  
+  if (bird.alive) {
+    bird.step();
+    app.stage.pivot.x = bird.x + 290;
+  }
+  if (bird.y + bird.height > APPHEIGHT) {
+    console.log("dead");
+    bird.kill();
+    return;
+  }
+
   let end_of_stage = app.stage.pivot.x + app.stage.x - WALLINITIALX;
   if (end_of_stage % WALLXINTERVAL == 0) {
     let rando = get_random_gap();
@@ -76,6 +86,8 @@ function step(delta) {
   let wall = wall_man.get_wall(0);
   if (wall && wall.collidesWithObj(bird)) {
     console.log("dead");
+    bird.kill();
+    return;
   }
   if (wall && !is_on_stage(app.stage, wall) && wall_man.size() > 1) {
     wall_man.remove_wall(0);
