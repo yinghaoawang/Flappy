@@ -18,33 +18,58 @@ let bird_man = new BirdManager(app.stage);
 let other_man = new ObjectManager(app.stage);
 let target_wall = null;
 let score = 0;
+let generation = 0;
 let use_ai = true;
 
-class BirdNeuralNetwork {
+class NeuralNetwork {
+  constructor(input_nodes, hidden_nodes, output_nodes) {
+    this.input_nodes = input_nodes;
+    this.hidden_nodes = hidden_nodes;
+    this.output_nodes = output_nodes;
+
+    this.input_weights = tf.randomNormal([this.input_nodes, this.hidden_nodes]);
+    this.output_weights = tf.randomNormal([
+      this.hidden_nodes,
+      this.output_nodes
+    ]);
+  }
+
+  predict(user_input) {
+    let output;
+    tf.tidy(() => {
+      let input_layer = tf.tensor(user_input, [1, this.input_nodes]);
+      let hidden_layer = input_layer.matMul(this.input_weights).sigmoid();
+      let output_layer = hidden_layer.matMul(this.output_weights).sigmoid();
+      output = output_layer.dataSync();
+    });
+    return output;
+  }
+
+  clone() {
+    let clone = new NeuralNetwork(
+      this.input_nodes,
+      this.hidden_nodes,
+      this.output_nodes
+    );
+    clone.dispose();
+    clone.input_weights = tf.clone(this.input_weights);
+    clone.output_weights = tf.clone(this.output_weights);
+    return clone;
+  }
+
+  dispose() {
+    this.input_weights.dispose();
+    this.output_weights.dispose();
+  }
+}
+
+class BirdNeuralNetwork extends NeuralNetwork {
   constructor() {
-    this.fitness = 0;
-    this.model = tf.sequential();
-    this.model.add(
-      tf.layers.dense({
-        inputShape: [2],
-        activation: "sigmoid",
-        units: 6
-      })
-    );
-    this.model.add(
-      tf.layers.dense({
-        activation: "sigmoid",
-        units: 1
-      })
-    );
-   this.compile();
+    super(2, 6, 1);
   }
-  compile() {
-    this.model.compile({optimizer: 'sgd', loss: 'meanSquaredError'});
-  }
-  predict(inputs) {
-    let tensor = tf.tensor2d([inputs.x, inputs.y], [1, 2]);
-    return this.model.predict(tensor);
+
+  predict(input) {
+    return super.predict([input.x, input.y]);
   }
 }
 
@@ -65,7 +90,7 @@ function init() {
   rkey.press = () => reset();
 
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, APPHEIGHT / 4, get_random_hex_color());
+    bird_man.add(10, APPHEIGHT / 4, get_random_hex_color(), nn_man[i]);
   }
 
   let bird = bird_man.get(0);
@@ -104,6 +129,7 @@ function init() {
 function step(delta) {
   if (!bird_man.has_living_bird()) {
     spacekey.press = null;
+    reset();
     return;
   }
   bird_man.step_all();
@@ -168,9 +194,10 @@ function step(delta) {
     for (let i = 0; i < bird_man.size(); ++i) {
       let bird = bird_man.get(i);
       if (!bird.alive) continue;
-      let nn = nn_man[i];
-      let alpha = nn.predict(bird.get_dist_from_target_wall(target_wall)).dataSync();
-      if (alpha > .5) bird.jump();
+      let nn = bird.brain;
+      let alpha = nn
+        .predict(bird.get_dist_from_target_wall(target_wall));
+      if (alpha > 0.5) bird.jump();
     }
   }
 }
@@ -187,6 +214,8 @@ function reset() {
   spacekey.press = null;
   rkey.press = null;
 
+  ++generation;
+  update_generation();
   init();
 }
 
@@ -194,6 +223,10 @@ function reset() {
 function update_score() {
   let score_elem = document.getElementById("score");
   score_elem.innerText = score;
+}
+function update_generation() {
+  let generation_elem = document.getElementById("generation");
+  generation_elem.innerText = generation;
 }
 
 // gets first object in array that is in front of object in terms of x and width

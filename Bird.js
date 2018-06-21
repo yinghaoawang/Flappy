@@ -7,7 +7,7 @@ const BIRDJUMPV = -10;
 const BIRDDEATHCOLOR = '0x7c0a02';
 
 class Bird extends PIXI.Sprite {
-    constructor(x, y, color) {
+    constructor(x, y, color, brain) {
         super(PIXI.Texture.WHITE)
         if (color != undefined) this.tint = color;
         this.x = x;
@@ -19,6 +19,7 @@ class Bird extends PIXI.Sprite {
         this.alive = true;
         this.walls_passed = 0;
         this.steps_taken = 0;
+        this.brain = brain;
     }
     get_dist_from_target_wall(target_wall) {
         let gap_bottom = target_wall.get_gap_bottom();
@@ -45,7 +46,7 @@ class Bird extends PIXI.Sprite {
     kill() {
         this.alive = false;
         this.tint = BIRDDEATHCOLOR;
-        play_sound("game-over");
+        //play_sound("game-over");
     }
     jump() {
         this.yv = BIRDJUMPV;

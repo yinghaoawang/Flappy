@@ -2,8 +2,8 @@ class BirdManager extends ObjectManager {
   constructor(stage) {
     super(stage);
   }
-  add(x, y, texture_name) {
-    let new_bird = new Bird(x, y, texture_name);
+  add(x, y, texture_name, nn) {
+    let new_bird = new Bird(x, y, texture_name, nn);
     super.add(new_bird);
   }
 
