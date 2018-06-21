@@ -17,6 +17,9 @@ class Bird extends PIXI.Sprite {
         this.yv = 0;
         this.alive = true;
         this.walls_passed = 0;
+        // horizontal/vertical distance from target wall
+        this.h_dist_f_tw = 0;
+        this.v_dist_f_tw = 0;
     }
     pass_wall() {
         ++this.walls_passed;

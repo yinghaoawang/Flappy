@@ -32,6 +32,9 @@ function init() {
   rkey.press = () => reset();
 
   bird_man.add(10, APPHEIGHT / 4);
+  bird_man.add(10, APPHEIGHT / 4 + 50);
+  bird_man.add(10, APPHEIGHT / 4 + 100);
+  bird_man.add(10, APPHEIGHT / 4 + 150);
   let bird = bird_man.get(0);
 
   app.stage.pivot.x = bird.x + 290;
@@ -88,22 +91,27 @@ function step(delta) {
     wall_man.add(app.stage.pivot.x + app.stage.x, rando);
   }
 
-  /* checks if any bird is off stage or crashing into the nearest wall or passes a wall */
-  let target_passed = false; // used to move target marker
+  // remove the leftmost wall if not on stage
   let wall = wall_man.get(0);
+  if (wall && !is_on_stage(app.stage, wall) && wall_man.size() > 1) {
+    wall_man.remove(0);
+  }
+
+  /* checks if any bird is off stage or crashing into the nearest wall or passes a wall */
+  let target_passed = false; // used to move target marker later
   for (let i = 0; i < bird_man.size(); ++i) {
     let bird = bird_man.get(i);
     if (!bird.alive) continue;
 
-    // checks if bird hits ground or a wall (dies)
-    let bird_collides_with_wall = (wall && wall.collidesWithObj(bird));
+    // checks if bird hits ground or target wall (dies)
+    let bird_collides_with_wall = (target_wall && target_wall.collidesWithObj(bird));
     let bird_hit_ground = (bird.y + bird.height > APPHEIGHT);
     if (bird_collides_with_wall || bird_hit_ground) {
       bird.kill();
       if (!bird_man.has_living_bird()) return;
     }
     
-    // checks if bird passes a wall (+score)
+    // checks if bird passes target wall (+score)
     let is_bird_pass_target_wall = target_wall && bird.x > target_wall.x + target_wall.width;
     if (is_bird_pass_target_wall) {
       target_passed = true;
@@ -112,11 +120,6 @@ function step(delta) {
       update_score();
       play_sound("bird-score");
     }
-  }
-
-  // remove the leftmost wall if not on stage
-  if (wall && !is_on_stage(app.stage, wall) && wall_man.size() > 1) {
-    wall_man.remove(0);
   }
 
   // moves the target marker to next target wall
@@ -134,11 +137,13 @@ function step(delta) {
   }
 }
 
+// sets the store in the html
 function update_score() {
   let score_elem = document.getElementById("score");
   score_elem.innerText = score;
 }
 
+// gets first object in array that is in front of object in terms of x and width
 function get_next_object_ahead(object, array) {
   let res = null;
   array.forEach(o => {
@@ -156,7 +161,6 @@ function reset() {
   other_man.clear();
 
   app.ticker.stop();
-  app.ticker = null;
   app.ticker = new PIXI.ticker.Ticker();
   spacekey.press = null;
   rkey.press = null;
