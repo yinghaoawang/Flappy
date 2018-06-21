@@ -4,7 +4,7 @@ const BIRDXV = 2;
 const GRAVITY = .5;
 const BIRDMAXYV = 4;
 const BIRDJUMPV = -10;
-const BIRDDEATHCOLOR = 0x666666;
+const BIRDDEATHCOLOR = '0x7c0a02';
 
 class Bird extends PIXI.Sprite {
     constructor(x, y, color) {

@@ -1,6 +1,5 @@
 // consts
-const WALLWIDTH = 30;
-const WALLGAPHEIGHT = 140;
+
 const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
