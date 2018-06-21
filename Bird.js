@@ -49,6 +49,6 @@ class Bird extends PIXI.Sprite {
     }
     jump() {
         this.yv = BIRDJUMPV;
-        play_sound("bird-jump");
+        //play_sound("bird-jump");
     }
 }

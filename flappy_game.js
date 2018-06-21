@@ -3,7 +3,7 @@ const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 1;
+const BIRDCOUNT = 5;
 
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
@@ -22,8 +22,6 @@ let use_ai = true;
 
 class BirdNeuralNetwork {
   constructor() {
-    this.x_dist_jump = Math.random() * 100;
-    this.y_dist_jump = Math.random() * 100;
     this.fitness = 0;
     this.model = tf.sequential();
     this.model.add(
@@ -48,16 +46,12 @@ class BirdNeuralNetwork {
     let tensor = tf.tensor2d([inputs.x, inputs.y], [1, 2]);
     return this.model.predict(tensor);
   }
-  eval(inputs) {
-    let tensor_input = tf.tensor2d([inputs.x, inputs.y], [1, 2]);
-    let tensor_target = tf.tensor2d([this.fitness], [1,1]);
-    return this.model.evaluate(tensor_input, tensor_target);
-  }
 }
 
-let nn_man = [
-  new BirdNeuralNetwork()
-];
+let nn_man = [];
+for (let i = 0; i < BIRDCOUNT; ++i) {
+  nn_man.push(new BirdNeuralNetwork());
+}
 
 app.stage.x = app.renderer.width / 2;
 
@@ -70,9 +64,8 @@ function init() {
   //spacekey.press = () => bird.jump();
   rkey.press = () => reset();
 
-  bird_man.add(10, APPHEIGHT / 4);
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, APPHEIGHT / 4 + i * 20, get_random_hex_color());
+    bird_man.add(10, APPHEIGHT / 4, get_random_hex_color());
   }
 
   let bird = bird_man.get(0);
@@ -172,13 +165,13 @@ function step(delta) {
   }
 
   if (target_wall) {
-    let nn = nn_man[0];
-    let bird = bird_man.get_living_bird();
-    nn.fitness = bird.fitness;
-    let dists = bird.get_dist_from_target_wall(target_wall)
-    let a = nn.predict(dists).dataSync();
-    console.log(a);
-    if (a > .5) bird.jump();
+    for (let i = 0; i < bird_man.size(); ++i) {
+      let bird = bird_man.get(i);
+      if (!bird.alive) continue;
+      let nn = nn_man[i];
+      let alpha = nn.predict(bird.get_dist_from_target_wall(target_wall)).dataSync();
+      if (alpha > .5) bird.jump();
+    }
   }
 }
 
