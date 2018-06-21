@@ -18,10 +18,7 @@ let wall_man = new WallManager(app.stage);
 let target_wall = null;
 let stage_objects = [];
 let score = 0;
-Object.keys(sounds).forEach(sound_key => {
-  let sound = sounds[sound_key];
-  sound.load();
-});
+
 app.stage.x = app.renderer.width / 2;
 
 init();
@@ -142,6 +139,7 @@ function get_next_object_ahead(object, array) {
 }
 
 function reset() {
+  stop_all_sounds();
   for (let i = 0; i < stage_objects.length; ++i) {
     let obj = stage_objects[i];
     app.stage.removeChild(obj);
