@@ -1,10 +1,9 @@
 // consts
-
 const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 10;
+const BIRDCOUNT = 1;
 
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
@@ -19,38 +18,61 @@ let bird_man = new BirdManager(app.stage);
 let other_man = new ObjectManager(app.stage);
 let target_wall = null;
 let score = 0;
+let use_ai = true;
 
-let model = tf.sequential();
-model.add(
-  tf.layers.dense({
-    inputShape: [2],
-    activation: "sigmoid",
-    units: 6
-  })
-);
-model.add(
-  tf.layers.dense({
-    inputShape: [6],
-    activation: "sigmoid",
-    units: 1
-  })
-);
+class BirdNeuralNetwork {
+  constructor() {
+    this.x_dist_jump = Math.random() * 100;
+    this.y_dist_jump = Math.random() * 100;
+    this.fitness = 0;
+    this.model = tf.sequential();
+    this.model.add(
+      tf.layers.dense({
+        inputShape: [2],
+        activation: "sigmoid",
+        units: 6
+      })
+    );
+    this.model.add(
+      tf.layers.dense({
+        activation: "sigmoid",
+        units: 1
+      })
+    );
+   this.compile();
+  }
+  compile() {
+    this.model.compile({optimizer: 'sgd', loss: 'meanSquaredError'});
+  }
+  predict(inputs) {
+    let tensor = tf.tensor2d([inputs.x, inputs.y], [1, 2]);
+    return this.model.predict(tensor);
+  }
+  eval(inputs) {
+    let tensor_input = tf.tensor2d([inputs.x, inputs.y], [1, 2]);
+    let tensor_target = tf.tensor2d([this.fitness], [1,1]);
+    return this.model.evaluate(tensor_input, tensor_target);
+  }
+}
+
+let nn_man = [
+  new BirdNeuralNetwork()
+];
 
 app.stage.x = app.renderer.width / 2;
 
 init();
 
 function init() {
-  console.log(model);
   app.ticker.add(delta => step(delta));
   app.ticker.start();
 
   //spacekey.press = () => bird.jump();
-  //rkey.press = () => reset();
+  rkey.press = () => reset();
 
   bird_man.add(10, APPHEIGHT / 4);
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, (APPHEIGHT / 4) + i * 20, get_random_hex_color());
+    bird_man.add(10, APPHEIGHT / 4 + i * 20, get_random_hex_color());
   }
 
   let bird = bird_man.get(0);
@@ -149,7 +171,15 @@ function step(delta) {
     }
   }
 
-  //if (target_wall) console.log(bird_man.get_living_bird().get_dist_from_target_wall(target_wall));
+  if (target_wall) {
+    let nn = nn_man[0];
+    let bird = bird_man.get_living_bird();
+    nn.fitness = bird.fitness;
+    let dists = bird.get_dist_from_target_wall(target_wall)
+    let a = nn.predict(dists).dataSync();
+    console.log(a);
+    if (a > .5) bird.jump();
+  }
 }
 
 // resets the stage
