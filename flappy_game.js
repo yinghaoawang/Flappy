@@ -135,6 +135,8 @@ function step(delta) {
       target_marker.y = centered_pos.y;
     }
   }
+
+  //if (target_wall) console.log(bird_man.get_living_bird().get_dist_from_target_wall(target_wall));
 }
 
 // sets the store in the html

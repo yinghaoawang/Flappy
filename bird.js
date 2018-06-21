@@ -17,9 +17,16 @@ class Bird extends PIXI.Sprite {
         this.yv = 0;
         this.alive = true;
         this.walls_passed = 0;
-        // horizontal/vertical distance from target wall
-        this.h_dist_f_tw = 0;
-        this.v_dist_f_tw = 0;
+        this.steps_taken = 0;
+    }
+    get_dist_from_target_wall(target_wall) {
+        let gap_bottom = target_wall.get_gap_bottom();
+        let h_dist = (target_wall.x + target_wall.width) - (this.x);
+        let v_dist = (gap_bottom.y) - (this.y + this.height);
+        return {
+            "x": h_dist,
+            "y": v_dist
+        };
     }
     pass_wall() {
         ++this.walls_passed;
@@ -32,6 +39,7 @@ class Bird extends PIXI.Sprite {
             this.yv = BIRDMAXYV;
         }
         this.y += this.yv;
+        ++this.steps_taken;
     }
     kill() {
         this.alive = false;
