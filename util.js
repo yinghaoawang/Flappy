@@ -16,3 +16,6 @@ function is_on_stage(stage = req(), object = req()) {
         (object.y + object.height) > (stage.pivot.y - stage.y) &&
         (object.y) < (stage.pivot.y + stage.y + stage.height);
 }
+function get_random_hex_color() {
+    return Math.floor(Math.random() * 0x1000000);
+  }

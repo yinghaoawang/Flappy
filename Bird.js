@@ -1,14 +1,15 @@
-let BIRDWIDTH = 20;
-let BIRDHEIGHT = 20;
-let BIRDXV = 2;
-let GRAVITY = .5;
-let BIRDMAXYV = 4;
-let BIRDJUMPV = -10;
+const BIRDWIDTH = 20;
+const BIRDHEIGHT = 20;
+const BIRDXV = 2;
+const GRAVITY = .5;
+const BIRDMAXYV = 4;
+const BIRDJUMPV = -10;
+const BIRDDEATHCOLOR = 0x666666;
 
 class Bird extends PIXI.Sprite {
-    constructor(x, y, texture_file) {
-        if (texture_file === undefined) texture_file = 'bird.png';
-        super(new PIXI.Texture.fromImage(texture_file));
+    constructor(x, y, color) {
+        super(PIXI.Texture.WHITE)
+        if (color != undefined) this.tint = color;
         this.x = x;
         this.y = y;
         this.width = BIRDWIDTH;
@@ -43,7 +44,7 @@ class Bird extends PIXI.Sprite {
     }
     kill() {
         this.alive = false;
-        this.setTexture(new PIXI.Texture.fromImage('dead-bird.png'));
+        this.tint = BIRDDEATHCOLOR;
         play_sound("game-over");
     }
     jump() {

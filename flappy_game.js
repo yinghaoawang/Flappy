@@ -5,6 +5,7 @@ const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
+const BIRDCOUNT = 10;
 
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
@@ -20,21 +21,39 @@ let other_man = new ObjectManager(app.stage);
 let target_wall = null;
 let score = 0;
 
+let model = tf.sequential();
+model.add(
+  tf.layers.dense({
+    inputShape: [2],
+    activation: "sigmoid",
+    units: 6
+  })
+);
+model.add(
+  tf.layers.dense({
+    inputShape: [6],
+    activation: "sigmoid",
+    units: 1
+  })
+);
+
 app.stage.x = app.renderer.width / 2;
 
 init();
 
 function init() {
+  console.log(model);
   app.ticker.add(delta => step(delta));
   app.ticker.start();
 
-  spacekey.press = () => bird.jump();
-  rkey.press = () => reset();
+  //spacekey.press = () => bird.jump();
+  //rkey.press = () => reset();
 
   bird_man.add(10, APPHEIGHT / 4);
-  bird_man.add(10, APPHEIGHT / 4 + 50);
-  bird_man.add(10, APPHEIGHT / 4 + 100);
-  bird_man.add(10, APPHEIGHT / 4 + 150);
+  for (let i = 0; i < BIRDCOUNT; ++i) {
+    bird_man.add(10, (APPHEIGHT / 4) + i * 20, get_random_hex_color());
+  }
+
   let bird = bird_man.get(0);
 
   app.stage.pivot.x = bird.x + 290;
@@ -67,15 +86,7 @@ function init() {
   update_score();
 }
 
-function get_random_gap() {
-  return WALLGAPHEIGHT + 10 + Math.random() * (APPHEIGHT - WALLGAPHEIGHT - 10);
-}
-
-function pan_stage() {
-  let bird = bird_man.get_living_bird();
-  app.stage.pivot.x = bird.x + 290;
-}
-
+// game loop
 function step(delta) {
   if (!bird_man.has_living_bird()) {
     spacekey.press = null;
@@ -104,16 +115,18 @@ function step(delta) {
     if (!bird.alive) continue;
 
     // checks if bird hits ground or target wall (dies)
-    let bird_collides_with_wall = (target_wall && target_wall.collidesWithObj(bird));
-    let bird_hit_ground = (bird.y + bird.height > APPHEIGHT);
-    let bird_hit_roof = (bird.y < 0);
+    let bird_collides_with_wall =
+      target_wall && target_wall.collidesWithObj(bird);
+    let bird_hit_ground = bird.y + bird.height > APPHEIGHT;
+    let bird_hit_roof = bird.y < 0;
     if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
       if (!bird_man.has_living_bird()) return;
     }
-    
+
     // checks if bird passes target wall (+score)
-    let is_bird_pass_target_wall = target_wall && bird.x > target_wall.x + target_wall.width;
+    let is_bird_pass_target_wall =
+      target_wall && bird.x > target_wall.x + target_wall.width;
     if (is_bird_pass_target_wall) {
       target_passed = true;
       bird.pass_wall();
@@ -140,6 +153,21 @@ function step(delta) {
   //if (target_wall) console.log(bird_man.get_living_bird().get_dist_from_target_wall(target_wall));
 }
 
+// resets the stage
+function reset() {
+  stop_all_sounds();
+  wall_man.clear();
+  bird_man.clear();
+  other_man.clear();
+
+  app.ticker.stop();
+  app.ticker = new PIXI.ticker.Ticker();
+  spacekey.press = null;
+  rkey.press = null;
+
+  init();
+}
+
 // sets the store in the html
 function update_score() {
   let score_elem = document.getElementById("score");
@@ -157,16 +185,13 @@ function get_next_object_ahead(object, array) {
   return res;
 }
 
-function reset() {
-  stop_all_sounds();
-  wall_man.clear();
-  bird_man.clear();
-  other_man.clear();
+// gets y position for a gap for wall creation
+function get_random_gap() {
+  return WALLGAPHEIGHT + 10 + Math.random() * (APPHEIGHT - WALLGAPHEIGHT - 10);
+}
 
-  app.ticker.stop();
-  app.ticker = new PIXI.ticker.Ticker();
-  spacekey.press = null;
-  rkey.press = null;
-
-  init();
+// make stage follow any living bird
+function pan_stage() {
+  let bird = bird_man.get_living_bird();
+  app.stage.pivot.x = bird.x + 290;
 }
