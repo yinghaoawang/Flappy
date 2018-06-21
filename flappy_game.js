@@ -106,7 +106,8 @@ function step(delta) {
     // checks if bird hits ground or target wall (dies)
     let bird_collides_with_wall = (target_wall && target_wall.collidesWithObj(bird));
     let bird_hit_ground = (bird.y + bird.height > APPHEIGHT);
-    if (bird_collides_with_wall || bird_hit_ground) {
+    let bird_hit_roof = (bird.y < 0);
+    if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
       if (!bird_man.has_living_bird()) return;
     }
