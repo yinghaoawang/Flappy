@@ -15,8 +15,9 @@ let spacekey = keyboard(32);
 let bird = null;
 let target_marker = null;
 let wall_man = new WallManager(app.stage);
+let bird_man = new BirdManager(app.stage);
+let other_man = new ObjectManager(app.stage);
 let target_wall = null;
-let stage_objects = [];
 let score = 0;
 
 app.stage.x = app.renderer.width / 2;
@@ -30,8 +31,8 @@ function init() {
   spacekey.press = () => bird.jump();
   rkey.press = () => reset();
 
-  bird = new Bird(10, APPHEIGHT / 4);
-  stage_objects.push(bird);
+  bird_man.add(10, APPHEIGHT / 4);
+  let bird = bird_man.get(0);
 
   app.stage.pivot.x = bird.x + 290;
   let end_of_stage = app.stage.pivot.x + app.stage.x + WALLINITIALX;
@@ -41,14 +42,14 @@ function init() {
     i += WALLXINTERVAL
   ) {
     let rando = get_random_gap();
-    wall_man.add_wall(i, rando);
+    wall_man.add(i, rando);
   }
-  target_wall = wall_man.get_wall(0);
+  target_wall = wall_man.get(0);
 
   target_marker = new PIXI.Graphics();
   target_marker.beginFill(0x0000ff);
   target_marker.drawRect(0, 0, 5, 5);
-  stage_objects.push(target_marker);
+  other_man.add(target_marker);
 
   if (target_wall) {
     let centered_pos = get_centered_pos(
@@ -59,10 +60,6 @@ function init() {
     target_marker.y = centered_pos.y;
   }
 
-  stage_objects.forEach(obj => {
-    app.stage.addChild(obj);
-  });
-
   score = 0;
   update_score();
 }
@@ -71,47 +68,61 @@ function get_random_gap() {
   return WALLGAPHEIGHT + 10 + Math.random() * (APPHEIGHT - WALLGAPHEIGHT - 10);
 }
 
+function pan_stage() {
+  let bird = bird_man.get_living_bird();
+  app.stage.pivot.x = bird.x + 290;
+}
+
 function step(delta) {
-  if (!bird.alive) {
+  if (!bird_man.has_living_bird()) {
     spacekey.press = null;
     return;
   }
-  bird.step();
-  app.stage.pivot.x = bird.x + 290;
+  bird_man.step_all();
+  pan_stage();
 
-  if (bird.y + bird.height > APPHEIGHT) {
-    console.log("dead");
-    bird.kill();
-    return;
-  }
-
+  // adds wall if reach set distance interval
   let end_of_stage = app.stage.pivot.x + app.stage.x - WALLINITIALX;
   if (end_of_stage % WALLXINTERVAL == 0) {
     let rando = get_random_gap();
-    wall_man.add_wall(app.stage.pivot.x + app.stage.x, rando);
+    wall_man.add(app.stage.pivot.x + app.stage.x, rando);
   }
 
-  let wall = wall_man.get_wall(0);
-  if (wall && wall.collidesWithObj(bird)) {
-    console.log("dead");
-    bird.kill();
-    return;
+  /* checks if any bird is off stage or crashing into the nearest wall or passes a wall */
+  let target_passed = false; // used to move target marker
+  let wall = wall_man.get(0);
+  for (let i = 0; i < bird_man.size(); ++i) {
+    let bird = bird_man.get(i);
+    if (!bird.alive) continue;
+
+    // checks if bird hits ground or a wall (dies)
+    let bird_collides_with_wall = (wall && wall.collidesWithObj(bird));
+    let bird_hit_ground = (bird.y + bird.height > APPHEIGHT);
+    if (bird_collides_with_wall || bird_hit_ground) {
+      bird.kill();
+      if (!bird_man.has_living_bird()) return;
+    }
+    
+    // checks if bird passes a wall (+score)
+    let is_bird_pass_target_wall = target_wall && bird.x > target_wall.x + target_wall.width;
+    if (is_bird_pass_target_wall) {
+      target_passed = true;
+      bird.pass_wall();
+      ++score;
+      update_score();
+      play_sound("bird-score");
+    }
   }
+
+  // remove the leftmost wall if not on stage
   if (wall && !is_on_stage(app.stage, wall) && wall_man.size() > 1) {
-    wall_man.remove_wall(0);
+    wall_man.remove(0);
   }
 
-  let is_bird_pass_target_wall =
-    target_wall && bird.x > target_wall.x + target_wall.width;
-
-  if (is_bird_pass_target_wall) {
-    ++score;
-    update_score();
-    play_sound("bird-score");
-  }
-
-  if (!target_wall || is_bird_pass_target_wall) {
-    target_wall = get_next_object_ahead(bird, wall_man.walls);
+  // moves the target marker to next target wall
+  if (!target_wall || target_passed) {
+    let bird = bird_man.get_living_bird();
+    target_wall = get_next_object_ahead(bird, wall_man.get_all());
     if (target_wall) {
       centered_pos = get_centered_pos(
         target_marker,
@@ -140,14 +151,9 @@ function get_next_object_ahead(object, array) {
 
 function reset() {
   stop_all_sounds();
-  for (let i = 0; i < stage_objects.length; ++i) {
-    let obj = stage_objects[i];
-    app.stage.removeChild(obj);
-    stage_objects.splice(i, 1);
-    obj = null;
-    --i;
-  }
   wall_man.clear();
+  bird_man.clear();
+  other_man.clear();
 
   app.ticker.stop();
   app.ticker = null;

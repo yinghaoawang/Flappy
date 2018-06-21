@@ -6,8 +6,9 @@ let BIRDMAXYV = 4;
 let BIRDJUMPV = -10;
 
 class Bird extends PIXI.Sprite {
-    constructor(x, y) {
-        super(new PIXI.Texture.fromImage('bird.png'));
+    constructor(x, y, texture_file) {
+        if (texture_file === undefined) texture_file = 'bird.png';
+        super(new PIXI.Texture.fromImage(texture_file));
         this.x = x;
         this.y = y;
         this.width = BIRDWIDTH;
@@ -15,7 +16,10 @@ class Bird extends PIXI.Sprite {
         this.xv = BIRDXV;
         this.yv = 0;
         this.alive = true;
-       
+        this.walls_passed = 0;
+    }
+    pass_wall() {
+        ++this.walls_passed;
     }
     step() {
         this.x += this.xv;
