@@ -32,7 +32,7 @@ let use_ai = true;
 // neural nets array
 let nns = [];
 for (let i = 0; i < BIRDCOUNT; ++i) {
-  nns.push(new BirdNeuralNetwork());
+  nns.push(new BirdNeuralNetwork(i));
 }
 
 init();
@@ -89,7 +89,6 @@ function evolve_birds() {
   birds.sort(compare);
   let cutoff1 = Math.floor(birds.length * .4);
   let cutoff2 = birds.length - cutoff1;
-  console.log(cutoff1, cutoff2, birds.length);
   // don't touch smart birds brains
   // mutate brains of smart birds for intermediate birds
   for (let i = cutoff1; i < cutoff2; ++i) {
@@ -102,7 +101,9 @@ function evolve_birds() {
   // fresh brains for dumb birds
   for (let i = cutoff2; i < birds.length; ++i) {
     let bird = birds[i];
-    bird.brain = new BirdNeuralNetwork();
+    let index = bird.brain.index;
+    nns[index].dispose();
+    nns[index] = new BirdNeuralNetwork(index);
     console.log('birds lobotomized');
   }
 
@@ -148,6 +149,9 @@ function step(delta) {
     let bird_hit_roof = bird.y < 0;
     if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
+      let fitness_penalty = get_dist_x_y(bird.get_dist_from_target_wall(target_wall));
+      bird.fitness -= fitness_penalty;
+      console.log(bird.fitness);
       if (!bird_man.has_living_bird()) return;
     }
 

@@ -5,6 +5,7 @@ const GRAVITY = .5;
 const BIRDMAXYV = 4;
 const BIRDJUMPV = -10;
 const BIRDDEATHCOLOR = '0x7c0a02';
+const WALLPASSFITNESSMULT = 20;
 
 class Bird extends PIXI.Sprite {
     constructor(x, y, color, brain) {
@@ -19,6 +20,7 @@ class Bird extends PIXI.Sprite {
         this.alive = true;
         this.walls_passed = 0;
         this.steps_taken = 0;
+        this.fitness = 0;
         this.brain = brain;
         this.alpha = .8;
     }
@@ -33,6 +35,7 @@ class Bird extends PIXI.Sprite {
     }
     pass_wall() {
         ++this.walls_passed;
+        this.fitness += WALLPASSFITNESSMULT;
     }
     step() {
         this.x += this.xv;
