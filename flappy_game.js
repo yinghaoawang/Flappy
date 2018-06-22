@@ -92,7 +92,9 @@ function evolve_birds() {
   // don't touch smart birds brains
   // mutate brains of smart birds for intermediate birds
   for (let i = cutoff1; i < cutoff2; ++i) {
-    let better_bird = birds[i - cutoff1];
+    let bb_index = Math.floor(0 + ((i - cutoff1) * .4));
+    console.log(bb_index);
+    let better_bird = birds[bb_index];
     let bird = birds[i];
     bird.brain = better_bird.brain.clone();
     bird.mutate();
@@ -186,8 +188,13 @@ function step(delta) {
       let bird = bird_man.get(i);
       if (!bird.alive) continue;
       let nn = bird.brain;
-      let alpha = nn
-        .predict(bird.get_dist_from_target_wall(target_wall));
+      let dist_from_ceil = bird.y;
+      let dist_from_floor = APPHEIGHT - (bird.y + bird.height);
+      let alpha = nn.predict(
+        dist_from_ceil,
+        dist_from_floor,
+        bird.get_dist_from_target_wall(target_wall)
+      );
       if (alpha > 0.5) bird.jump();
     }
   }
