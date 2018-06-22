@@ -20,6 +20,7 @@ class Bird extends PIXI.Sprite {
         this.walls_passed = 0;
         this.steps_taken = 0;
         this.brain = brain;
+        this.alpha = .8;
     }
     get_dist_from_target_wall(target_wall) {
         let gap_bottom = target_wall.get_gap_bottom();
@@ -51,5 +52,29 @@ class Bird extends PIXI.Sprite {
     jump() {
         this.yv = BIRDJUMPV;
         //play_sound("bird-jump");
+    }
+
+    // for genetics, mutates brain
+    mutate() {
+        // mutation function
+        function fn(x) {
+			if (Math.random() < 0.05) {
+				let offset = random_gaussian() * 0.5;
+                let newx = x + offset;
+				return newx;
+			}
+			return x;
+        }
+        // mutate input->hidden weights
+        let new_ih = this.brain.input_weights.dataSync().map(fn);
+        let ih_shape = this.brain.input_weights.shape;
+        this.brain.input_weights.dispose();
+        this.brain.input_weights = tf.tensor(new_ih, ih_shape);
+
+        // mutate hidden->output weights
+        let new_oh = this.brain.output_weights.dataSync().map(fn);
+        let oh_shape = this.brain.output_weights.shape;
+        this.brain.output_weights.dispose();
+        this.brain.output_weights = tf.tensor(new_oh, oh_shape);
     }
 }

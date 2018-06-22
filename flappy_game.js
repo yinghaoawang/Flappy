@@ -3,11 +3,19 @@ const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 5;
+const BIRDCOUNT = 12;
+const BACKGROUNDCOLOR = 0xefefef;
 
-const app = new PIXI.Application(APPWIDTH, APPHEIGHT);
+// create application canvas
+const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
+  backgroundColor: BACKGROUNDCOLOR
+});
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
 
+// needed for proper panning
+app.stage.x = app.renderer.width / 2;
+
+// globals
 let rkey = keyboard(82);
 let spacekey = keyboard(32);
 
@@ -21,12 +29,11 @@ let score = 0;
 let generation = 0;
 let use_ai = true;
 
-let nn_man = [];
+// neural nets array
+let nns = [];
 for (let i = 0; i < BIRDCOUNT; ++i) {
-  nn_man.push(new BirdNeuralNetwork());
+  nns.push(new BirdNeuralNetwork());
 }
-
-app.stage.x = app.renderer.width / 2;
 
 init();
 
@@ -38,7 +45,7 @@ function init() {
   rkey.press = () => reset();
 
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, APPHEIGHT / 4, get_random_hex_color(), nn_man[i]);
+    bird_man.add(10, APPHEIGHT / 4, get_random_hex_color(), nns[i]);
   }
 
   let bird = bird_man.get(0);
@@ -73,13 +80,45 @@ function init() {
   update_score();
 }
 
+function evolve_birds() {
+  function compare(a, b) {
+    return a.fitness - b.fitness;
+  }
+  
+  let birds = bird_man.get_all();
+  birds.sort(compare);
+  let cutoff1 = Math.floor(birds.length * .4);
+  let cutoff2 = birds.length - cutoff1;
+  console.log(cutoff1, cutoff2, birds.length);
+  // don't touch smart birds brains
+  // mutate brains of smart birds for intermediate birds
+  for (let i = cutoff1; i < cutoff2; ++i) {
+    let better_bird = birds[i - cutoff1];
+    let bird = birds[i];
+    bird.brain = better_bird.brain.clone();
+    bird.mutate();
+    console.log('birds mutated');
+  }
+  // fresh brains for dumb birds
+  for (let i = cutoff2; i < birds.length; ++i) {
+    let bird = birds[i];
+    bird.brain = new BirdNeuralNetwork();
+    console.log('birds lobotomized');
+  }
+
+}
+
 // game loop
 function step(delta) {
+  // if all birds are dead then evolve brains and reset stage
   if (!bird_man.has_living_bird()) {
     spacekey.press = null;
+    evolve_birds();
     reset();
     return;
   }
+
+  // move birds and stage
   bird_man.step_all();
   pan_stage();
 

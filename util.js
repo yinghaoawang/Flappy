@@ -19,3 +19,7 @@ function is_on_stage(stage = req(), object = req()) {
 function get_random_hex_color() {
     return Math.floor(Math.random() * 0x1000000);
   }
+
+  function random_gaussian() {
+      return ((Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random()) - 3) / 3;
+  }
