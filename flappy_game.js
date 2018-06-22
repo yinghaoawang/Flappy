@@ -5,7 +5,7 @@ const APPWIDTH = 800;
 const APPHEIGHT = 600;
 const BIRDCOUNT = 20;
 const BACKGROUNDCOLOR = 0xefefef;
-const WALLDISTMULT = .8;
+const WALLDISTMULT = 0.8;
 
 // create application canvas
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
@@ -35,10 +35,12 @@ let nns = [];
 for (let i = 0; i < BIRDCOUNT; ++i) {
   nns.push(new BirdNeuralNetwork(i));
 }
+let history = {};
 
 init();
 
 function init() {
+  //init_table();
   app.ticker.add(delta => step(delta));
   app.ticker.start();
 
@@ -78,30 +80,30 @@ function init() {
   }
 
   score = 0;
-  update_score();
+  update_text();
 }
 
 function evolve_birds() {
   function compare(a, b) {
     return b.fitness - a.fitness;
   }
-  
+
   let birds = bird_man.get_all();
   birds.sort(compare);
-  let cutoff1 = Math.floor(birds.length * .25);
+  let cutoff1 = Math.floor(birds.length * 0.25);
   let cutoff2 = birds.length - cutoff1;
   // don't touch smart birds brains
   // mutate brains of smart birds for intermediate birds
   for (let i = 0; i < cutoff1; ++i) {
     let bird = birds[i];
-    console.log('untouched: ' + bird.fitness);
+    console.log("untouched: " + bird.fitness);
   }
   for (let i = cutoff1; i < cutoff2; ++i) {
-    let bb_index = Math.floor(0 + ((i - cutoff1) * .2));
+    let bb_index = Math.floor(0 + (i - cutoff1) * 0.2);
     let better_bird = birds[bb_index];
-    
+
     let bird = birds[i];
-    console.log('better: ' + better_bird.fitness + ", me: " + bird.fitness);
+    console.log("better: " + better_bird.fitness + ", me: " + bird.fitness);
     bird.brain = better_bird.brain.clone();
     bird.mutate();
   }
@@ -111,18 +113,15 @@ function evolve_birds() {
     let index = bird.brain.index;
     nns[index].dispose();
     nns[index] = new BirdNeuralNetwork(index);
-    console.log('bad: ' + bird.fitness);
+    console.log("bad: " + bird.fitness);
   }
-
 }
 
 // game loop
 function step(delta) {
   // if all birds are dead then evolve brains and reset stage
   if (!bird_man.has_living_bird()) {
-    spacekey.press = null;
-    evolve_birds();
-    reset();
+    do_on_dead_birds();
     return;
   }
 
@@ -156,7 +155,9 @@ function step(delta) {
     let bird_hit_roof = bird.y < 0;
     if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
-      let fitness_penalty = get_dist_x_y(bird.get_dist_from_target_wall(target_wall));
+      let fitness_penalty = get_dist_x_y(
+        bird.get_dist_from_target_wall(target_wall)
+      );
       bird.fitness -= fitness_penalty * WALLDISTMULT;
       if (!bird_man.has_living_bird()) return;
     }
@@ -167,9 +168,6 @@ function step(delta) {
     if (is_bird_pass_target_wall) {
       target_passed = true;
       bird.pass_wall();
-      ++score;
-      update_score();
-      play_sound("bird-score");
     }
   }
 
@@ -187,6 +185,12 @@ function step(delta) {
     }
   }
 
+  if (target_passed) {
+    ++score;
+    update_text();
+    play_sound("bird-score");
+  }
+
   if (target_wall) {
     for (let i = 0; i < bird_man.size(); ++i) {
       let bird = bird_man.get(i);
@@ -194,12 +198,17 @@ function step(delta) {
       let nn = bird.brain;
       //let dist_from_ceil = bird.y;
       //let dist_from_floor = APPHEIGHT - (bird.y + bird.height);
-      let alpha = nn.predict(
-        bird.get_dist_from_target_wall(target_wall)
-      );
+      let alpha = nn.predict(bird.get_dist_from_target_wall(target_wall));
       if (alpha > 0.5) bird.jump();
     }
   }
+}
+
+// runs when all birds dead
+function do_on_dead_birds() {
+  spacekey.press = null;
+  evolve_birds();
+  reset();
 }
 
 // resets the stage
@@ -209,22 +218,47 @@ function reset() {
   bird_man.clear();
   other_man.clear();
 
-  app.ticker.stop();
-  app.ticker = new PIXI.ticker.Ticker();
-  spacekey.press = null;
-  rkey.press = null;
+  reset_ticker();
+  unbind_keys();
+  
 
+  update_history();
   ++generation;
-  update_generation();
+  update_text();
   init();
 }
 
+function update_history() {
+  let birds = bird_man.get_all();
+  for (let i = 0; i < birds.length; ++i) {
+    let bird = birds[i];
+    let bird_data = {
+      "fitness": bird.fitness,
+      "color": bird.tint,
+      "input_weights": bird.brain.input_weights,
+      "output_weights": bird.brain.output_weights
+    };
+    history[i] = bird_data;
+  }
+
+  console.log(history);
+  
+}
+
+function reset_ticker() {
+  app.ticker.stop();
+  app.ticker = new PIXI.ticker.Ticker();
+}
+
+function unbind_keys() {
+  spacekey.press = null;
+  rkey.press = null;
+}
+
 // sets the store in the html
-function update_score() {
+function update_text() {
   let score_elem = document.getElementById("score");
   score_elem.innerText = score;
-}
-function update_generation() {
   let generation_elem = document.getElementById("generation");
   generation_elem.innerText = generation;
 }
@@ -249,4 +283,21 @@ function get_random_gap() {
 function pan_stage() {
   let bird = bird_man.get_living_bird();
   app.stage.pivot.x = bird.x + 290;
+}
+
+function init_table() {
+  let table_elem = document.getElementById("table");
+  table_elem.innerHTML = `<tr>
+  <th></th>`;
+  for (let i = 0; i < generation; ++i) {
+  table_elem.innerHTML +=
+      `<th>${generation}</th>`
+  }
+  table_elem.innerHTML += `</tr><tr>`;
+  
+  for (let i = 0; i < BIRDCOUNT; ++i) {
+    table_elem.innerHTML += `<td>${i}</td>`;
+    table_elem.innerHTML += ``;
+  }
+  table_elem.innerHTML += `</tr>`;
 }
