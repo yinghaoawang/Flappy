@@ -5,6 +5,7 @@ const APPWIDTH = 800;
 const APPHEIGHT = 600;
 const BIRDCOUNT = 12;
 const BACKGROUNDCOLOR = 0xefefef;
+const WALLDISTMULT = .8;
 
 // create application canvas
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
@@ -82,7 +83,7 @@ function init() {
 
 function evolve_birds() {
   function compare(a, b) {
-    return a.fitness - b.fitness;
+    return b.fitness - a.fitness;
   }
   
   let birds = bird_man.get_all();
@@ -93,12 +94,12 @@ function evolve_birds() {
   // mutate brains of smart birds for intermediate birds
   for (let i = cutoff1; i < cutoff2; ++i) {
     let bb_index = Math.floor(0 + ((i - cutoff1) * .4));
-    console.log(bb_index);
     let better_bird = birds[bb_index];
+    
     let bird = birds[i];
+    console.log('better: ' + better_bird.fitness + ", me: " + bird.fitness);
     bird.brain = better_bird.brain.clone();
     bird.mutate();
-    console.log('birds mutated');
   }
   // fresh brains for dumb birds
   for (let i = cutoff2; i < birds.length; ++i) {
@@ -106,7 +107,7 @@ function evolve_birds() {
     let index = bird.brain.index;
     nns[index].dispose();
     nns[index] = new BirdNeuralNetwork(index);
-    console.log('birds lobotomized');
+    console.log('bad: ' + bird.fitness);
   }
 
 }
@@ -152,8 +153,7 @@ function step(delta) {
     if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
       let fitness_penalty = get_dist_x_y(bird.get_dist_from_target_wall(target_wall));
-      bird.fitness -= fitness_penalty;
-      console.log(bird.fitness);
+      bird.fitness -= fitness_penalty * WALLDISTMULT;
       if (!bird_man.has_living_bird()) return;
     }
 
