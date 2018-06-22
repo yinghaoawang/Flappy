@@ -3,7 +3,7 @@ const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 12;
+const BIRDCOUNT = 20;
 const BACKGROUNDCOLOR = 0xefefef;
 const WALLDISTMULT = .8;
 
@@ -88,12 +88,16 @@ function evolve_birds() {
   
   let birds = bird_man.get_all();
   birds.sort(compare);
-  let cutoff1 = Math.floor(birds.length * .4);
+  let cutoff1 = Math.floor(birds.length * .25);
   let cutoff2 = birds.length - cutoff1;
   // don't touch smart birds brains
   // mutate brains of smart birds for intermediate birds
+  for (let i = 0; i < cutoff1; ++i) {
+    let bird = birds[i];
+    console.log('untouched: ' + bird.fitness);
+  }
   for (let i = cutoff1; i < cutoff2; ++i) {
-    let bb_index = Math.floor(0 + ((i - cutoff1) * .4));
+    let bb_index = Math.floor(0 + ((i - cutoff1) * .2));
     let better_bird = birds[bb_index];
     
     let bird = birds[i];
@@ -188,11 +192,9 @@ function step(delta) {
       let bird = bird_man.get(i);
       if (!bird.alive) continue;
       let nn = bird.brain;
-      let dist_from_ceil = bird.y;
-      let dist_from_floor = APPHEIGHT - (bird.y + bird.height);
+      //let dist_from_ceil = bird.y;
+      //let dist_from_floor = APPHEIGHT - (bird.y + bird.height);
       let alpha = nn.predict(
-        dist_from_ceil,
-        dist_from_floor,
         bird.get_dist_from_target_wall(target_wall)
       );
       if (alpha > 0.5) bird.jump();
