@@ -2,7 +2,7 @@ const BIRDWIDTH = 20;
 const BIRDHEIGHT = 20;
 const BIRDXV = 2;
 const GRAVITY = .5;
-const BIRDMAXYV = 4;
+const BIRDMAXYV = 8;
 const BIRDJUMPV = -10;
 const BIRDDEATHCOLOR = '0x7c0a02';
 const WALLPASSFITNESSMULT = 50;
@@ -12,7 +12,6 @@ class Bird extends PIXI.Sprite {
         super(PIXI.Texture.WHITE)
         if (color != undefined) {
             this.tint = '0x' + color.substring(1);
-            console.log(this.tint);
             this.color = color;
         } else {
             this.color = "#ffffff";

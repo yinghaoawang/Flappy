@@ -1,6 +1,6 @@
 // consts
-const WALLXINTERVAL = 300;
-const WALLINITIALX = 260;
+const WALLXINTERVAL = 150;
+const WALLINITIALX = 200;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
 const BIRDCOUNT = 8;
@@ -93,30 +93,32 @@ function evolve_birds() {
 
   let birds = bird_man.get_all();
   birds.sort(compare);
-  let cutoff1 = Math.floor(birds.length * 0.25);
+  let cutoff1 = Math.floor(birds.length * 0.33);
   let cutoff2 = birds.length - cutoff1;
   // don't touch smart birds brains
   // mutate brains of smart birds for intermediate birds
   for (let i = 0; i < cutoff1; ++i) {
     let bird = birds[i];
-    //console.log("untouched: " + bird.fitness);
+    bird.mutate();
+    console.log("best: " + bird.fitness + " " + i);
   }
-  for (let i = cutoff1; i < cutoff2; ++i) {
-    let bb_index = Math.floor(0 + (i - cutoff1) * 0.2);
+  for (let i = cutoff1; i < birds.length; ++i) {
+    let bb_index = Math.floor(0 + (i - cutoff1) * 0.5);
     let better_bird = birds[bb_index];
 
     let bird = birds[i];
     //console.log("better: " + better_bird.fitness + ", me: " + bird.fitness);
-    bird.brain = better_bird.brain.clone();
+    bird.brain = better_bird.brain.clone(bird.brain.index);
     bird.mutate();
   }
-  // fresh brains for dumb birds
-  for (let i = cutoff2; i < birds.length; ++i) {
+  // fresh brains for dumb birds (less than 0 fitness)
+  for (let i = 0; i < birds.length; ++i) {
     let bird = birds[i];
+    if (bird.fitness > 0) continue;
     let index = bird.brain.index;
     nns[index].dispose();
     nns[index] = new BirdNeuralNetwork(index);
-    //console.log("bad: " + bird.fitness);
+    //console.log("killed: " + bird.fitness);
   }
 }
 
@@ -211,14 +213,15 @@ function step(delta) {
 // runs when all birds dead
 function do_on_dead_birds() {
   spacekey.press = null;
-  update_history();
-  evolve_birds();
   reset();
 }
 
 // resets the stage
 function reset() {
   stop_all_sounds();
+
+  update_history();
+  evolve_birds();
 
   ++generation;
   update_text();
@@ -310,13 +313,45 @@ function init_table() {
   for (let i = 0; i < BIRDCOUNT; ++i) {
     table += "<tr>";
     table += `<td>${i}</td>`;
+    
     for (let g = 0; g < generation; ++g) {
+      let s_bird = history[g][i];
+      let iwval = s_bird.input_weights.toString();
+    let owval = s_bird.output_weights.toString();
+      let iwlen = s_bird.input_weights.length;
+      let owlen = s_bird.output_weights.length;
+      if (g > 0 && s_bird.fitness > 0 && history[g-1][i].fitness > 0) {
+        iwval = "";
+        owval = "";
+        ps_bird = history[g-1][i];
+        for (let j = 0; j < iwlen; ++j) {
+          if (s_bird.input_weights[j] > ps_bird.input_weights[j]) {
+            iwval += "<span style='background-color: green'>" + s_bird.input_weights[j] + "</span>";
+          } else if (s_bird.input_weights[j] > ps_bird.input_weights[j]) {
+            iwval += "<span style='background-color: red'>" + s_bird.input_weights[j] + "</span>";
+          } else {
+            iwval += s_bird.input_weights[j];
+          }
+        }
+        for (let j = 0; j < owlen; ++j) {
+          if (s_bird.output_weights[j] > ps_bird.output_weights[j]) {
+            owval += "<span style='background-color: green'>" + s_bird.output_weights[j] + "</span>";
+          } else if (s_bird.output_weights[j] > ps_bird.output_weights[j]) {
+            owval += "<span style='background-color: red'>" + s_bird.output_weights[j] + "</span>";
+          } else {
+            owval += s_bird.output_weights[j];
+          }
+        }
+      }
+      let fitness = history[g][i].fitness;
+      let fitness_color = "green";
+      if (fitness < 0) fitness_color = "white";
       table += `
       <td>
         color: <font color='${history[g][i].color}'>██████</font><br/>
-        fitness: ${history[g][i].fitness}<br/>
-        iw: ${history[g][i].input_weights}<br/>
-        ow: ${history[g][i].output_weights}<br/>
+        fitness: <span style='background-color: ${fitness_color}'>${fitness}</span><br/>
+        iw: ${iwval}<br/>
+        ow: ${owval}<br/>
       </td>
     `;
     }
