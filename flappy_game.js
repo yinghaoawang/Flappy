@@ -32,9 +32,12 @@ let use_ai = true;
 
 // neural nets array
 let nns = [];
+let set_colors = [];
 for (let i = 0; i < BIRDCOUNT; ++i) {
-  nns.push(new BirdNeuralNetwork(i));
+  nns[i] = new BirdNeuralNetwork(i);
+  set_colors[i] = get_random_hex_color();
 }
+
 let history = [];
 
 init();
@@ -48,7 +51,7 @@ function init() {
   rkey.press = () => reset();
 
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, APPHEIGHT / 4, get_random_hex_color(), nns[i]);
+    bird_man.add(10, APPHEIGHT / 4, set_colors[i], nns[i]);
   }
 
   let bird = bird_man.get(0);
