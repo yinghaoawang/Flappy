@@ -10,7 +10,12 @@ const WALLPASSFITNESSMULT = 20;
 class Bird extends PIXI.Sprite {
     constructor(x, y, color, brain) {
         super(PIXI.Texture.WHITE)
-        if (color != undefined) this.tint = color;
+        if (color != undefined) {
+            this.tint = color;
+            this.color = color;
+        } else {
+            this.color = 0xffffff;
+        }
         this.x = x;
         this.y = y;
         this.width = BIRDWIDTH;

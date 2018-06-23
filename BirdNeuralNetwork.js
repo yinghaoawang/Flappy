@@ -1,6 +1,6 @@
 class BirdNeuralNetwork extends NeuralNetwork {
     constructor(index) {
-      super(2, 10, 1);
+      super(2, 1, 1);
       this.index = index;
     }
   

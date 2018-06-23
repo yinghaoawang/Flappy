@@ -35,12 +35,12 @@ let nns = [];
 for (let i = 0; i < BIRDCOUNT; ++i) {
   nns.push(new BirdNeuralNetwork(i));
 }
-let history = {};
+let history = [];
 
 init();
 
 function init() {
-  //init_table();
+  init_table();
   app.ticker.add(delta => step(delta));
   app.ticker.start();
 
@@ -96,14 +96,14 @@ function evolve_birds() {
   // mutate brains of smart birds for intermediate birds
   for (let i = 0; i < cutoff1; ++i) {
     let bird = birds[i];
-    console.log("untouched: " + bird.fitness);
+    //console.log("untouched: " + bird.fitness);
   }
   for (let i = cutoff1; i < cutoff2; ++i) {
     let bb_index = Math.floor(0 + (i - cutoff1) * 0.2);
     let better_bird = birds[bb_index];
 
     let bird = birds[i];
-    console.log("better: " + better_bird.fitness + ", me: " + bird.fitness);
+    //console.log("better: " + better_bird.fitness + ", me: " + bird.fitness);
     bird.brain = better_bird.brain.clone();
     bird.mutate();
   }
@@ -113,7 +113,7 @@ function evolve_birds() {
     let index = bird.brain.index;
     nns[index].dispose();
     nns[index] = new BirdNeuralNetwork(index);
-    console.log("bad: " + bird.fitness);
+    //console.log("bad: " + bird.fitness);
   }
 }
 
@@ -167,6 +167,7 @@ function step(delta) {
       target_wall && bird.x > target_wall.x + target_wall.width;
     if (is_bird_pass_target_wall) {
       target_passed = true;
+      ++score;
       bird.pass_wall();
     }
   }
@@ -186,7 +187,7 @@ function step(delta) {
   }
 
   if (target_passed) {
-    ++score;
+    //++score;
     update_text();
     play_sound("bird-score");
   }
@@ -207,6 +208,7 @@ function step(delta) {
 // runs when all birds dead
 function do_on_dead_birds() {
   spacekey.press = null;
+  update_history();
   evolve_birds();
   reset();
 }
@@ -214,35 +216,43 @@ function do_on_dead_birds() {
 // resets the stage
 function reset() {
   stop_all_sounds();
+
+  ++generation;
+  update_text();
+
   wall_man.clear();
   bird_man.clear();
   other_man.clear();
 
   reset_ticker();
   unbind_keys();
-  
 
-  update_history();
-  ++generation;
-  update_text();
   init();
 }
 
 function update_history() {
   let birds = bird_man.get_all();
+  history[generation] = [];
   for (let i = 0; i < birds.length; ++i) {
     let bird = birds[i];
-    let bird_data = {
-      "fitness": bird.fitness,
-      "color": bird.tint,
-      "input_weights": bird.brain.input_weights,
-      "output_weights": bird.brain.output_weights
+    let iw = Array.from(bird.brain.input_weights.dataSync());
+    let ow = Array.from(bird.brain.output_weights.dataSync());
+    let round_fn = e => {
+      return Number(e.toFixed(2));
     };
-    history[i] = bird_data;
+    iw = iw.map(round_fn);
+    ow = ow.map(round_fn);
+    console.log(bird.color);
+    let bird_data = {
+      fitness: round_fn(bird.fitness),
+      color: bird.color,
+      input_weights: iw,
+      output_weights: ow
+    };
+    history[generation][i] = bird_data;
   }
 
   console.log(history);
-  
 }
 
 function reset_ticker() {
@@ -286,18 +296,34 @@ function pan_stage() {
 }
 
 function init_table() {
-  let table_elem = document.getElementById("table");
-  table_elem.innerHTML = `<tr>
-  <th></th>`;
+  let table = `
+  <table>
+  <thead>
+  <tr>
+    <th>Bird</th>`;
   for (let i = 0; i < generation; ++i) {
-  table_elem.innerHTML +=
-      `<th>${generation}</th>`
+    table += `<th>Gen ${i}</th>`;
   }
-  table_elem.innerHTML += `</tr><tr>`;
-  
+  table += `</tr></thead>`;
+
+  table += "<tbody>";
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    table_elem.innerHTML += `<td>${i}</td>`;
-    table_elem.innerHTML += ``;
+    table += "<tr>";
+    table += `<td>${i}</td>`;
+    for (let g = 0; g < generation; ++g) {
+      table += `
+      <td>
+        fitness: ${history[g][i].fitness}<br/>
+        color: <font color='${history[g][i].color}'>██████</font><br/>
+        iw: ${history[g][i].input_weights}<br/>
+        ow: ${history[g][i].output_weights}<br/>
+      </td>
+    `;
+    }
+    table += "</tr>";
   }
-  table_elem.innerHTML += `</tr>`;
+  table += "</tbody></table>";
+
+  let table_holder = document.getElementById("table-holder");
+  table_holder.innerHTML = table;
 }
