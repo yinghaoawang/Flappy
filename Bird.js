@@ -5,7 +5,7 @@ const GRAVITY = .5;
 const BIRDMAXYV = 8;
 const BIRDJUMPV = -10;
 const BIRDDEATHCOLOR = '0x7c0a02';
-const WALLPASSFITNESSMULT = 50;
+const WALLPASSFITNESSMULT = 100;
 
 class Bird extends PIXI.Sprite {
     constructor(x, y, color, brain) {
