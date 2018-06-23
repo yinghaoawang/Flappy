@@ -23,7 +23,8 @@ function is_on_stage(stage = req(), object = req()) {
   );
 }
 function get_random_hex_color() {
-  return Math.floor(Math.random() * 0x1000000);
+  let r = '#'+Math.floor(Math.random()*16777215).toString(16);
+  return r;
 }
 
 function get_dist_x_y(obj) {

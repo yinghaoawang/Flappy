@@ -3,9 +3,9 @@ const WALLXINTERVAL = 300;
 const WALLINITIALX = 260;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 20;
+const BIRDCOUNT = 8;
 const BACKGROUNDCOLOR = 0xefefef;
-const WALLDISTMULT = 0.8;
+const WALLDISTMULT = 0.1;
 
 // create application canvas
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
@@ -170,13 +170,13 @@ function step(delta) {
       target_wall && bird.x > target_wall.x + target_wall.width;
     if (is_bird_pass_target_wall) {
       target_passed = true;
-      ++score;
       bird.pass_wall();
     }
   }
 
   // moves the target marker to next target wall
   if (!target_wall || target_passed) {
+    ++score;
     let bird = bird_man.get_living_bird();
     target_wall = get_next_object_ahead(bird, wall_man.get_all());
     if (target_wall) {
@@ -245,7 +245,6 @@ function update_history() {
     };
     iw = iw.map(round_fn);
     ow = ow.map(round_fn);
-    console.log(bird.color);
     let bird_data = {
       fitness: round_fn(bird.fitness),
       color: bird.color,
@@ -254,8 +253,6 @@ function update_history() {
     };
     history[generation][i] = bird_data;
   }
-
-  console.log(history);
 }
 
 function reset_ticker() {
@@ -316,8 +313,8 @@ function init_table() {
     for (let g = 0; g < generation; ++g) {
       table += `
       <td>
-        fitness: ${history[g][i].fitness}<br/>
         color: <font color='${history[g][i].color}'>██████</font><br/>
+        fitness: ${history[g][i].fitness}<br/>
         iw: ${history[g][i].input_weights}<br/>
         ow: ${history[g][i].output_weights}<br/>
       </td>
