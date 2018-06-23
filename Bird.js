@@ -3,7 +3,7 @@ const BIRDHEIGHT = 20;
 const BIRDXV = 2;
 const GRAVITY = .5;
 const BIRDMAXYV = 8;
-const BIRDJUMPV = -10;
+const BIRDJUMPV = -8;
 const BIRDDEATHCOLOR = '0x7c0a02';
 const WALLPASSFITNESSMULT = 100;
 

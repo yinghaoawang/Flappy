@@ -1,5 +1,5 @@
 // consts
-const WALLXINTERVAL = 150;
+const WALLXINTERVAL = 120;
 const WALLINITIALX = 150;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
@@ -94,6 +94,7 @@ function evolve_birds() {
   let birds = bird_man.get_all();
   birds.sort(compare);
   let cutoff1 = Math.floor(birds.length * 0.33);
+  let cutoff2 = Math.floor(birds.length * .9);
 
   // mutate the best birds
   for (let i = 0; i < cutoff1; ++i) {
@@ -103,17 +104,19 @@ function evolve_birds() {
   }
 
   // copy the best bird brains for intermediate birds, then mutate again
-  for (let i = cutoff1; i < birds.length; ++i) {
+  for (let i = cutoff1; i < cutoff2; ++i) {
     let bb_index = Math.floor(0 + (i - cutoff1) * 0.5);
     let better_bird = birds[bb_index];
 
     let bird = birds[i];
-    bird.brain = better_bird.brain.clone(bird.brain.index);
-    bird.mutate();
+    let index = bird.brain.index;
+    nns[index] = better_bird.brain.clone(index);
+    bird.brain = nns[index];
+    for (let i = 0; i < 10; ++i) bird.mutate();
   }
 
-  // fresh brains for dumb birds (less than 0 fitness)
-  for (let i = 0; i < birds.length; ++i) {
+  // fresh brains for dumb birds
+  for (let i = cutoff2; i < birds.length; ++i) {
     let bird = birds[i];
     if (bird.fitness > 0) continue;
     let index = bird.brain.index;
@@ -204,7 +207,7 @@ function step(delta) {
       let nn = bird.brain;
       //let dist_from_ceil = bird.y;
       //let dist_from_floor = APPHEIGHT - (bird.y + bird.height);
-      let alpha = nn.predict(bird.get_dist_from_target_wall(target_wall));
+      let alpha = nn.predict(bird.yv, bird.get_dist_from_target_wall(target_wall));
       if (alpha > 0.5) bird.jump();
     }
   }
@@ -300,7 +303,7 @@ function pan_stage() {
 
 function init_table() {
   let table = `
-  <table>
+  <table border="1" style="table-layout: fixed">
   <thead>
   <tr>
     <th>Bird</th>`;
@@ -327,7 +330,7 @@ function init_table() {
         for (let j = 0; j < iwlen; ++j) {
           if (s_bird.input_weights[j] > ps_bird.input_weights[j]) {
             iwval += "<span style='background-color: green'>" + s_bird.input_weights[j] + "</span>";
-          } else if (s_bird.input_weights[j] > ps_bird.input_weights[j]) {
+          } else if (s_bird.input_weights[j] < ps_bird.input_weights[j]) {
             iwval += "<span style='background-color: red'>" + s_bird.input_weights[j] + "</span>";
           } else {
             iwval += s_bird.input_weights[j];
@@ -336,11 +339,12 @@ function init_table() {
         for (let j = 0; j < owlen; ++j) {
           if (s_bird.output_weights[j] > ps_bird.output_weights[j]) {
             owval += "<span style='background-color: green'>" + s_bird.output_weights[j] + "</span>";
-          } else if (s_bird.output_weights[j] > ps_bird.output_weights[j]) {
+          } else if (s_bird.output_weights[j] < ps_bird.output_weights[j]) {
             owval += "<span style='background-color: red'>" + s_bird.output_weights[j] + "</span>";
           } else {
             owval += s_bird.output_weights[j];
           }
+          if (j > 0 && j % 4 == 0) owval += "<br/>";
         }
       }
       let fitness = history[g][i].fitness;
