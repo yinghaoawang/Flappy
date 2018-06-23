@@ -98,11 +98,10 @@ function evolve_birds() {
   let cutoff1 = Math.floor(birds.length * 0.33);
   let cutoff2 = Math.floor(birds.length * 0.9);
 
-  // mutate the best birds
-  for (let i = 0; i < cutoff1; ++i) {
+  // mutate the best birds (keep best untouched)
+  for (let i = 1; i < cutoff1; ++i) {
     let bird = birds[i];
     bird.mutate();
-    console.log("best: " + bird.fitness + " " + i);
   }
 
   // copy the best bird brains for intermediate birds, then mutate again
@@ -187,8 +186,6 @@ function step(delta) {
     let bird = bird_man.get_living_bird();
     target_wall = get_next_object_ahead(bird, wall_man.get_all());
     second_target_wall = get_next_object_ahead(target_wall, wall_man.get_all());
-
-    console.log(bird.get_dist_from_target_wall(target_wall), bird.get_dist_from_target_wall(second_target_wall));
 
     if (target_wall) {
       centered_pos = get_centered_pos(
