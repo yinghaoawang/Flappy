@@ -1,6 +1,6 @@
 // consts
 const WALLXINTERVAL = 150;
-const WALLINITIALX = 200;
+const WALLINITIALX = 150;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
 const BIRDCOUNT = 8;
@@ -51,7 +51,7 @@ function init() {
   rkey.press = () => reset();
 
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, APPHEIGHT / 4, set_colors[i], nns[i]);
+    bird_man.add(10, APPHEIGHT / 2, set_colors[i], nns[i]);
   }
 
   let bird = bird_man.get(0);
