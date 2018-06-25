@@ -93,9 +93,10 @@ function init() {
 function evolve_birds() {
   function compare(a, b) {
     return b.fitness - a.fitness;
-  }  
+  }
 
   let kill_cutoff = .8;
+  let untouched_cutoff = .25;
 
   let birds = bird_man.get_all();
   birds.sort(compare);
@@ -112,7 +113,7 @@ function evolve_birds() {
   }
 
   // crossover
-  for (let i = birds.length * .25; i < birds.length * kill_cutoff; ++i) {
+  for (let i = birds.length * untouched_cutoff; i < birds.length * kill_cutoff; ++i) {
     let bird = birds[i];
     let partner_index = Math.floor(Math.random() * mating_pool.length);
     let partner = mating_pool[partner_index];
@@ -182,6 +183,8 @@ function step(delta) {
       bird.kill();
       let fitness_penalty =
         (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) / WALLXINTERVAL;
+      fitness_penalty += (bird.get_dist_from_target_wall(target_wall).y / APPHEIGHT) * 2;
+      console.log(fitness_penalty);
       bird.fitness -= fitness_penalty;
       if (!bird_man.has_living_bird()) return;
     }
@@ -241,15 +244,23 @@ function do_on_dead_birds() {
   reset();
 }
 
+// checks if no birds passed
+function check_failed_generation() {
+  return score <= 0;
+}
+
 // resets the stage
 function reset() {
   stop_all_sounds();
+  let failed_generation = check_failed_generation();
 
-  update_history();
-  evolve_birds();
+  if (!failed_generation) {
+    update_history();
+    evolve_birds();
 
-  ++generation;
-  update_text();
+    ++generation;
+    update_text();
+  }
 
   wall_man.clear();
   bird_man.clear();
