@@ -110,10 +110,15 @@ function evolve_birds() {
     let better_bird = birds[bb_index];
 
     let bird = birds[i];
+
+    let new_brain = bird.cross_over(better_bird);
+    
     let index = bird.brain.index;
-    nns[index] = better_bird.brain.clone(index);
+    nns[index] = new_brain; //better_bird.brain.clone(index);
     bird.brain = nns[index];
+    /*
     for (let i = 0; i < 50; ++i) bird.mutate();
+    */
   }
 
   // fresh brains for dumb birds

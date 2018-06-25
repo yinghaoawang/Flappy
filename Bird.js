@@ -87,4 +87,16 @@ class Bird extends PIXI.Sprite {
         this.brain.output_weights.dispose();
         this.brain.output_weights = tf.tensor(new_oh, oh_shape);
     }
+
+    cross_over(partner) {
+        console.log(this.brain.input_weights);
+        let child_brain = this.brain.clone(this.brain.index);
+        for (let i = 0; i < this.brain.input_weights.length; ++i) {
+            if (Math.random() < .5) {
+                console.log("mutated index: " + i);
+                child_brain.input_weights[i] = partner.input_weights[i];
+            }
+        }
+        return child_brain;
+    }
 }
