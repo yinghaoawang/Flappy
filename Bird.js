@@ -6,7 +6,6 @@ const BIRDMAXYV = 90;
 //const BIRDJUMPV = -8;
 const BIRDJUMPACC = -2;
 const BIRDDEATHCOLOR = '0x7c0a02';
-const WALLPASSFITNESSMULT = 100;
 
 class Bird extends PIXI.Sprite {
     constructor(x, y, color, brain) {

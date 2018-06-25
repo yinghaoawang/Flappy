@@ -3,9 +3,11 @@ const WALLXINTERVAL = 120;
 const WALLINITIALX = 150;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 8;
+const BIRDCOUNT = 30;
 const BACKGROUNDCOLOR = 0xefefef;
-const WALLDISTMULT = 0.1;
+
+// bird
+const WALLPASSFITNESSMULT = 2;
 
 // create application canvas
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
@@ -94,6 +96,7 @@ function evolve_birds() {
   }
 
   let birds = bird_man.get_all();
+  let mating_pool = [];
   birds.sort(compare);
   let cutoff1 = Math.floor(birds.length * 0.33);
   let cutoff2 = Math.floor(birds.length * 0.9);
@@ -169,10 +172,10 @@ function step(delta) {
     let bird_hit_roof = bird.y < 0;
     if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
-      let fitness_penalty = get_dist_x_y(
-        bird.get_dist_from_target_wall(target_wall)
-      );
-      bird.fitness -= fitness_penalty * WALLDISTMULT;
+      let fitness_penalty =
+        bird.get_dist_from_target_wall(target_wall).x - target_wall.width;
+      bird.fitness -= fitness_penalty;
+      console.log(bird.fitness);
       if (!bird_man.has_living_bird()) return;
     }
 
