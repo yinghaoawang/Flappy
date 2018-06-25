@@ -3,11 +3,11 @@ const WALLXINTERVAL = 120;
 const WALLINITIALX = 150;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
-const BIRDCOUNT = 30;
+const BIRDCOUNT = 8;
 const BACKGROUNDCOLOR = 0xefefef;
 
 // bird
-const WALLPASSFITNESSMULT = 50;
+const WALLPASSFITNESSMULT = BIRDCOUNT * 5;
 
 // create application canvas
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
@@ -91,33 +91,52 @@ function init() {
 }
 
 function evolve_birds() {
-  /*
   function compare(a, b) {
     return b.fitness - a.fitness;
-  }
-  birds.sort(compare);
-  */
+  }  
+
+  let kill_cutoff = .8;
 
   let birds = bird_man.get_all();
+  birds.sort(compare);
 
-  // put birds into mating pool where higher fitness has higher chance
+  // selection
   let mating_pool = [];
   for (let i = 0; i < birds.length; ++i) {
     let bird = birds[i];
-    if (bird.fitness <= 0) mating_pool.push(bird);
-    else {
-      for (let f = 0; f < bird.fitness; ++f) mating_pool.push(bird);
+    for (let f = 0; f < bird.fitness; ++f) mating_pool.push(bird);
+
+    if (bird.fitness <= 0 && i < birds.length * .5)  {
+      mating_pool.push(bird);
     }
   }
 
-  for (let i = 0; i < birds.length; ++i) {
+  // crossover
+  for (let i = birds.length * .25; i < birds.length * kill_cutoff; ++i) {
     let bird = birds[i];
     let partner_index = Math.floor(Math.random() * mating_pool.length);
-    let partner = mating_pool(partner_index);
+    let partner = mating_pool[partner_index];
 
     let new_brain = bird.cross_over(partner);
+    console.log('made babies with ' + mating_pool[partner_index].brain.index);
     
     let index = bird.brain.index;
+    nns[index] = new_brain;
+    bird.brain = nns[index];
+  }
+
+  // mutation
+  for (let i = 0; i < birds.length * kill_cutoff; ++i) {
+    let bird = birds[i];
+    // stronger mutation for weaker birds
+    for (let t = 0; t < (i / birds.length) * 50; ++t) bird.mutate;
+  }
+
+  // kill off the weak
+  for (let i = Math.floor(birds.length * kill_cutoff); i < birds.length; ++i) {
+    let bird = birds[i];
+    let index = bird.brain.index;
+    let new_brain = new BirdNeuralNetwork(index);
     nns[index] = new_brain;
     bird.brain = nns[index];
   }
@@ -164,7 +183,6 @@ function step(delta) {
       let fitness_penalty =
         (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) / WALLXINTERVAL;
       bird.fitness -= fitness_penalty;
-      console.log(bird.fitness);
       if (!bird_man.has_living_bird()) return;
     }
 
