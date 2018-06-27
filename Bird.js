@@ -30,6 +30,13 @@ class Bird extends PIXI.Sprite {
         this.alpha = 1;//.8;
     }
     get_dist_from_target_wall(target_wall) {
+        if (target_wall == undefined) {
+            console.error("Target wall does not exist.");
+            return {
+                "x": 0,
+                "y": 0
+            };
+        }
         let gap_bottom = target_wall.get_gap_bottom();
         let h_dist = (target_wall.x + target_wall.width) - (this.x);
         let v_dist = (gap_bottom.y) - (this.y + this.height);

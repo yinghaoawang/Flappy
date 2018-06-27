@@ -23,7 +23,7 @@ class Wall extends MultiPart {
         this.bottomwall.x = 0;
         this.bottomwall.y = gy;
         this.bottomwall.width = WALLWIDTH;
-        this.bottomwall.height = APPHEIGHT - gy;
+        this.bottomwall.height = SIMHEIGHT - gy;
         this.addChild(this.topwall);
         this.addChild(this.bottomwall);
     }

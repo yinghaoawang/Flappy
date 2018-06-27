@@ -1,14 +1,15 @@
 // consts
 const WALLXINTERVAL = 130;
 const WALLINITIALX = 130;
-const APPWIDTH = 800;
-const APPHEIGHT = 600;
+const SIMWIDTH = 800;
+const SIMHEIGHT = 600;
 const BIRDCOUNT = 8;
 const BACKGROUNDCOLOR = 0xefefef;
 
-const INFOAPPWIDTH = 800;
-const INFOAPPHEIGHT = 400;
-const INFOBACKGROUNDCOLOR = 0x000000;
+const INFOHEIGHT = 300;
+
+const APPWIDTH = SIMWIDTH;
+const APPHEIGHT = SIMHEIGHT + INFOHEIGHT;
 
 // bird
 const WALLPASSFITNESSMULT = BIRDCOUNT * 5;
@@ -19,16 +20,22 @@ const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
 });
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
 
-// needed for proper panning
-app.stage.x = app.renderer.width / 2;
-
 // globals
 let rkey = keyboard(82);
 let spacekey = keyboard(32);
 
 let game_stage = new PIXI.Container();
-game_stage.width = APPWIDTH;
-game_stage.height = APPHEIGHT;
+game_stage.width = SIMWIDTH;
+game_stage.height = SIMHEIGHT;
+game_stage.x = app.renderer.width / 2;
+game_stage.y = 0;
+app.stage.addChild(game_stage);
+
+let info_stage = new PIXI.Container();
+info_stage.width = SIMWIDTH;
+info_stage.height = INFOHEIGHT;
+info_stage.x = 0;
+info_stage.y = APPHEIGHT;
 app.stage.addChild(game_stage);
 
 let bird = null;
@@ -40,7 +47,7 @@ let target_wall = null;
 let second_target_wall = null;
 let score = 0;
 let generation = 0;
-let use_ai = true;
+//let use_ai = true;
 
 // neural nets array
 let nns = [];
@@ -63,12 +70,13 @@ function init() {
   rkey.press = () => reset();
 
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, APPHEIGHT / 2, set_colors[i], nns[i]);
+    bird_man.add(10, SIMHEIGHT / 2, set_colors[i], nns[i]);
   }
 
   let bird = bird_man.get(0);
 
-  let end_of_stage = app.stage.pivot.x + app.stage.x + WALLINITIALX;
+  game_stage.pivot.x = bird.x + 290;
+  let end_of_stage = game_stage.pivot.x + game_stage.x + WALLINITIALX;
   for (
     let i = WALLINITIALX;
     i < end_of_stage - WALLXINTERVAL;
@@ -103,8 +111,8 @@ function evolve_birds() {
     return b.fitness - a.fitness;
   }
 
-  let kill_cutoff = .8;
-  let untouched_cutoff = .25;
+  let kill_cutoff = 0.8;
+  let untouched_cutoff = 0.25;
 
   let birds = bird_man.get_all();
   birds.sort(compare);
@@ -115,20 +123,24 @@ function evolve_birds() {
     let bird = birds[i];
     for (let f = 0; f < bird.fitness; ++f) mating_pool.push(bird);
 
-    if (bird.fitness <= 0 && i < birds.length * .5)  {
+    if (bird.fitness <= 0 && i < birds.length * 0.5) {
       mating_pool.push(bird);
     }
   }
 
   // crossover
-  for (let i = birds.length * untouched_cutoff; i < birds.length * kill_cutoff; ++i) {
+  for (
+    let i = birds.length * untouched_cutoff;
+    i < birds.length * kill_cutoff;
+    ++i
+  ) {
     let bird = birds[i];
     let partner_index = Math.floor(Math.random() * mating_pool.length);
     let partner = mating_pool[partner_index];
 
     let new_brain = bird.cross_over(partner);
-    console.log('made babies with ' + mating_pool[partner_index].brain.index);
-    
+    console.log("made babies with " + mating_pool[partner_index].brain.index);
+
     let index = bird.brain.index;
     nns[index] = new_brain;
     bird.brain = nns[index];
@@ -164,15 +176,15 @@ function step(delta) {
   pan_stage();
 
   // adds wall if reach set distance interval
-  let end_of_stage = app.stage.pivot.x + app.stage.x - WALLINITIALX;
+  let end_of_stage = game_stage.pivot.x + game_stage.x - WALLINITIALX;
   if (end_of_stage % WALLXINTERVAL == 0) {
     let rando = get_random_gap();
-    wall_man.add(app.stage.pivot.x + app.stage.x, rando);
+    wall_man.add(game_stage.pivot.x + game_stage.x, rando);
   }
 
   // remove the leftmost wall if not on stage
   let wall = wall_man.get(0);
-  if (wall && !is_on_stage(app.stage, wall) && wall_man.size() > 1) {
+  if (wall && !is_on_stage(game_stage, wall) && wall_man.size() > 1) {
     wall_man.remove(0);
   }
 
@@ -185,15 +197,18 @@ function step(delta) {
     // checks if bird hits ground or target wall (dies)
     let bird_collides_with_wall =
       target_wall && target_wall.collidesWithObj(bird);
-    let bird_hit_ground = bird.y + bird.height > APPHEIGHT;
+    let bird_hit_ground = bird.y + bird.height > SIMHEIGHT;
     let bird_hit_roof = bird.y < 0;
     if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
       bird.kill();
-      let fitness_penalty =
-        (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) / WALLXINTERVAL;
-      fitness_penalty += (bird.get_dist_from_target_wall(target_wall).y / APPHEIGHT);
-      console.log(fitness_penalty);
-      bird.fitness -= fitness_penalty;
+      if (target_wall) {
+        let fitness_penalty =
+          (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) /
+          WALLXINTERVAL;
+        fitness_penalty +=
+          bird.get_dist_from_target_wall(target_wall).y / SIMHEIGHT;
+        bird.fitness -= fitness_penalty;
+      }
       if (!bird_man.has_living_bird()) return;
     }
 
@@ -322,6 +337,10 @@ function update_text() {
 
 // gets first object in array that is in front of object in terms of x and width
 function get_next_object_ahead(object, array) {
+  if (object == undefined) {
+    console.log("Object does not exist.");
+    return null;
+  }
   let res = null;
   array.forEach(o => {
     if (res == null && object.x < o.x + o.width) {
@@ -333,13 +352,14 @@ function get_next_object_ahead(object, array) {
 
 // gets y position for a gap for wall creation
 function get_random_gap() {
-  return WALLGAPHEIGHT + 10 + Math.random() * (APPHEIGHT - WALLGAPHEIGHT - 10);
+  return WALLGAPHEIGHT + 10 + Math.random() * (SIMHEIGHT - WALLGAPHEIGHT - 10);
 }
 
 // make stage follow any living bird
 function pan_stage() {
   let bird = bird_man.get_living_bird();
-  app.stage.pivot.x = bird.x + 290;
+  //game_stage.x = bird.x + 200;
+  game_stage.pivot.x = bird.x + 200;
 }
 
 function init_table() {
