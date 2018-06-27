@@ -19,11 +19,6 @@ const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
 });
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
 
-const info_app = new PIXI.Application(INFOAPPWIDTH, INFOAPPHEIGHT, {
-  backgroundColor: INFOBACKGROUNDCOLOR
-});
-document.getElementsByClassName("container-info")[0].appendChild(info_app.view);
-
 // needed for proper panning
 app.stage.x = app.renderer.width / 2;
 
@@ -31,11 +26,16 @@ app.stage.x = app.renderer.width / 2;
 let rkey = keyboard(82);
 let spacekey = keyboard(32);
 
+let game_stage = new PIXI.Container();
+game_stage.width = APPWIDTH;
+game_stage.height = APPHEIGHT;
+app.stage.addChild(game_stage);
+
 let bird = null;
 let target_marker = null;
-let wall_man = new WallManager(app.stage);
-let bird_man = new BirdManager(app.stage);
-let other_man = new ObjectManager(app.stage);
+let wall_man = new WallManager(game_stage);
+let bird_man = new BirdManager(game_stage);
+let other_man = new ObjectManager(game_stage);
 let target_wall = null;
 let second_target_wall = null;
 let score = 0;
@@ -68,7 +68,6 @@ function init() {
 
   let bird = bird_man.get(0);
 
-  app.stage.pivot.x = bird.x + 290;
   let end_of_stage = app.stage.pivot.x + app.stage.x + WALLINITIALX;
   for (
     let i = WALLINITIALX;
