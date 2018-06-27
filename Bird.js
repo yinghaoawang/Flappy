@@ -10,7 +10,8 @@ const BIRDDEATHCOLOR = '0x7c0a02';
 
 class Bird extends PIXI.Sprite {
     constructor(x, y, color, brain) {
-        super(PIXI.Texture.WHITE)
+        super(PIXI.Texture.WHITE);
+        //super(new PIXI.Texture.fromImage('bird.png'));
         if (color != undefined) {
             this.tint = '0x' + color.substring(1);
             this.color = color;

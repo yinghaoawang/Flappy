@@ -1,20 +1,22 @@
 // consts
-const WALLXINTERVAL = 290;
-const WALLINITIALX = 130;
-const SIMWIDTH = 800;
-const SIMHEIGHT = 600;
 const BIRDCOUNT = 8;
+
+const WALLXINTERVAL = 170;
+const WALLINITIALX = 130;
+
+const SIMWIDTH = 900;
+const SIMHEIGHT = 600;
+
 const INFOWIDTH = SIMWIDTH;
 const INFOHEIGHT = 300;
-
-const BACKGROUNDCOLOR = 0xefefef;
 const INFOBGCOLOR = 0x555555;
-
 
 const APPWIDTH = SIMWIDTH;
 const APPHEIGHT = SIMHEIGHT + INFOHEIGHT;
+const BACKGROUNDCOLOR = 0xefefef;
 
-// bird
+const CAMOFFSET = 290;
+
 const WALLPASSFITNESSMULT = BIRDCOUNT * 5;
 
 // create application canvas
@@ -85,7 +87,7 @@ function init() {
 
   let bird = bird_man.get(0);
 
-  game_stage.pivot.x = bird.x + 290;
+  game_stage.pivot.x = CAMOFFSET;
   add_initial_walls();
   target_wall = wall_man.get(0);
 
@@ -172,12 +174,7 @@ function step(delta) {
   pan_stage();
 
   // adds wall if reach set distance interval
-  let end_of_stage = game_stage.pivot.x + game_stage.x - WALLINITIALX;
-  if (end_of_stage % WALLXINTERVAL == 0 && end_of_stage > SIMWIDTH) {
-    let rando = get_random_gap();
-    wall_man.add(game_stage.pivot.x + game_stage.x, rando);
-    console.log(end_of_stage);
-  }
+  step_add_walls();
 
   // remove the leftmost wall if not on stage
   let wall = wall_man.get(0);
@@ -250,14 +247,24 @@ function step(delta) {
 }
 
 function add_initial_walls() {
-  for (
-    let i = WALLINITIALX;
-    i < SIMWIDTH;
-    i += WALLXINTERVAL
-  ) {
+  let end_of_stage = game_stage.pivot.x + game_stage.x + WALLINITIALX;
+  for (let i = WALLINITIALX; i <= end_of_stage; i += WALLXINTERVAL) {
     let rando = get_random_gap();
     wall_man.add(i, rando);
     console.log(i);
+  }
+}
+
+function step_add_walls() {
+  let end_of_stage = game_stage.pivot.x + game_stage.x + WALLINITIALX;
+  if (
+    end_of_stage % WALLXINTERVAL == 0
+  ) {
+    
+    let adjusted_x = end_of_stage + (WALLINITIALX - WALLXINTERVAL);
+    console.log(adjusted_x);
+    let rando = get_random_gap();
+    wall_man.add(adjusted_x, rando);
   }
 }
 
@@ -289,11 +296,11 @@ function reset() {
 
   if (!failed_generation) {
     */
-    update_history();
-    evolve_birds();
+  update_history();
+  evolve_birds();
 
-    ++generation;
-    update_text();
+  ++generation;
+  update_text();
   //}
 
   wall_man.clear();
@@ -368,12 +375,11 @@ function get_random_gap() {
 
 // make stage follow any living bird
 function pan_stage() {
-  let bird = bird_man.get_living_bird();
-  //game_stage.x = bird.x + 200;
-  game_stage.pivot.x = bird.x + 200;
+  game_stage.pivot.x += BIRDXV;
 }
 
 function init_table() {
+  /*
   let table = `
   <table border="1" style="table-layout: fixed">
   <thead>
@@ -450,4 +456,5 @@ function init_table() {
 
   let table_holder = document.getElementById("table-holder");
   table_holder.innerHTML = table;
+  */
 }
