@@ -1,10 +1,14 @@
 // consts
-const WALLXINTERVAL = 120;
-const WALLINITIALX = 150;
+const WALLXINTERVAL = 130;
+const WALLINITIALX = 130;
 const APPWIDTH = 800;
 const APPHEIGHT = 600;
 const BIRDCOUNT = 8;
 const BACKGROUNDCOLOR = 0xefefef;
+
+const INFOAPPWIDTH = 800;
+const INFOAPPHEIGHT = 400;
+const INFOBACKGROUNDCOLOR = 0x000000;
 
 // bird
 const WALLPASSFITNESSMULT = BIRDCOUNT * 5;
@@ -14,6 +18,11 @@ const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
   backgroundColor: BACKGROUNDCOLOR
 });
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
+
+const info_app = new PIXI.Application(INFOAPPWIDTH, INFOAPPHEIGHT, {
+  backgroundColor: INFOBACKGROUNDCOLOR
+});
+document.getElementsByClassName("container-info")[0].appendChild(info_app.view);
 
 // needed for proper panning
 app.stage.x = app.renderer.width / 2;
@@ -183,7 +192,7 @@ function step(delta) {
       bird.kill();
       let fitness_penalty =
         (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) / WALLXINTERVAL;
-      fitness_penalty += (bird.get_dist_from_target_wall(target_wall).y / APPHEIGHT) * 2;
+      fitness_penalty += (bird.get_dist_from_target_wall(target_wall).y / APPHEIGHT);
       console.log(fitness_penalty);
       bird.fitness -= fitness_penalty;
       if (!bird_man.has_living_bird()) return;
