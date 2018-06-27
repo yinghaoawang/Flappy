@@ -1,24 +1,3 @@
-// consts
-const BIRDCOUNT = 8;
-
-const WALLXINTERVAL = 170;
-const WALLINITIALX = 130;
-
-const SIMWIDTH = 900;
-const SIMHEIGHT = 600;
-
-const INFOWIDTH = SIMWIDTH;
-const INFOHEIGHT = 300;
-const INFOBGCOLOR = 0x555555;
-
-const APPWIDTH = SIMWIDTH;
-const APPHEIGHT = SIMHEIGHT + INFOHEIGHT;
-const BACKGROUNDCOLOR = 0xefefef;
-
-const CAMOFFSET = 290;
-
-const WALLPASSFITNESSMULT = BIRDCOUNT * 5;
-
 // create application canvas
 const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
   backgroundColor: BACKGROUNDCOLOR
@@ -45,7 +24,6 @@ info_bg.height = INFOHEIGHT;
 info_bg.tint = INFOBGCOLOR;
 info_stage.addChild(info_bg);
 app.stage.addChild(info_stage);
-console.log(info_stage);
 
 // load random colors and init neural nets
 let set_colors = [];
@@ -87,7 +65,7 @@ function init() {
 
   let bird = bird_man.get(0);
 
-  game_stage.pivot.x = CAMOFFSET;
+  game_stage.pivot.x = CAMERAOFFSET;
   add_initial_walls();
   target_wall = wall_man.get(0);
 
@@ -251,7 +229,6 @@ function add_initial_walls() {
   for (let i = WALLINITIALX; i <= end_of_stage; i += WALLXINTERVAL) {
     let rando = get_random_gap();
     wall_man.add(i, rando);
-    console.log(i);
   }
 }
 
@@ -262,7 +239,6 @@ function step_add_walls() {
   ) {
     
     let adjusted_x = end_of_stage + (WALLINITIALX - WALLXINTERVAL);
-    console.log(adjusted_x);
     let rando = get_random_gap();
     wall_man.add(adjusted_x, rando);
   }
@@ -356,7 +332,7 @@ function update_text() {
 // gets first object in array that is in front of object in terms of x and width
 function get_next_object_ahead(object, array) {
   if (object == undefined) {
-    console.log("Object does not exist.");
+    console.error("Object does not exist.");
     return null;
   }
   let res = null;

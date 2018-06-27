@@ -1,13 +1,3 @@
-const BIRDWIDTH = 20;
-const BIRDHEIGHT = 20;
-const BIRDXV = 2;
-const GRAVITY = .8;
-const BIRDMAXYV = 90;
-const ACCELERATING_JUMP = false;
-const BIRDJUMPV = -12;
-const BIRDJUMPACC = -2;
-const BIRDDEATHCOLOR = '0x7c0a02';
-
 class Bird extends PIXI.Sprite {
     constructor(x, y, color, brain) {
         super(PIXI.Texture.WHITE);
@@ -64,7 +54,6 @@ class Bird extends PIXI.Sprite {
     }
     kill() {
         this.alive = false;
-        //this.tint = BIRDDEATHCOLOR;
         //play_sound("game-over");
     }
     jump() {
