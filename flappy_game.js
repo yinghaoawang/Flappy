@@ -1,12 +1,15 @@
 // consts
-const WALLXINTERVAL = 130;
+const WALLXINTERVAL = 290;
 const WALLINITIALX = 130;
 const SIMWIDTH = 800;
 const SIMHEIGHT = 600;
 const BIRDCOUNT = 8;
-const BACKGROUNDCOLOR = 0xefefef;
-
+const INFOWIDTH = SIMWIDTH;
 const INFOHEIGHT = 300;
+
+const BACKGROUNDCOLOR = 0xefefef;
+const INFOBGCOLOR = 0x555555;
+
 
 const APPWIDTH = SIMWIDTH;
 const APPHEIGHT = SIMHEIGHT + INFOHEIGHT;
@@ -20,10 +23,7 @@ const app = new PIXI.Application(APPWIDTH, APPHEIGHT, {
 });
 document.getElementsByClassName("container-game")[0].appendChild(app.view);
 
-// globals
-let rkey = keyboard(82);
-let spacekey = keyboard(32);
-
+// set up game stage
 let game_stage = new PIXI.Container();
 game_stage.width = SIMWIDTH;
 game_stage.height = SIMHEIGHT;
@@ -31,32 +31,42 @@ game_stage.x = app.renderer.width / 2;
 game_stage.y = 0;
 app.stage.addChild(game_stage);
 
+// set up info stage
 let info_stage = new PIXI.Container();
-info_stage.width = SIMWIDTH;
+info_stage.width = INFOWIDTH;
 info_stage.height = INFOHEIGHT;
 info_stage.x = 0;
-info_stage.y = APPHEIGHT;
-app.stage.addChild(game_stage);
+info_stage.y = SIMHEIGHT;
+let info_bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+info_bg.width = INFOWIDTH;
+info_bg.height = INFOHEIGHT;
+info_bg.tint = INFOBGCOLOR;
+info_stage.addChild(info_bg);
+app.stage.addChild(info_stage);
+console.log(info_stage);
 
+// load random colors and init neural nets
+let set_colors = [];
+let nns = []; // neural nets array
+for (let i = 0; i < BIRDCOUNT; ++i) {
+  nns[i] = new BirdNeuralNetwork(i);
+  set_colors[i] = get_random_hex_color();
+}
+
+// key set
+let rkey = keyboard(82);
+let spacekey = keyboard(32);
+
+// globals
 let bird = null;
 let target_marker = null;
 let wall_man = new WallManager(game_stage);
 let bird_man = new BirdManager(game_stage);
 let other_man = new ObjectManager(game_stage);
 let target_wall = null;
-let second_target_wall = null;
 let score = 0;
 let generation = 0;
 //let use_ai = true;
-
-// neural nets array
-let nns = [];
-let set_colors = [];
-for (let i = 0; i < BIRDCOUNT; ++i) {
-  nns[i] = new BirdNeuralNetwork(i);
-  set_colors[i] = get_random_hex_color();
-}
-
 let history = [];
 
 init();
@@ -76,30 +86,16 @@ function init() {
   let bird = bird_man.get(0);
 
   game_stage.pivot.x = bird.x + 290;
-  let end_of_stage = game_stage.pivot.x + game_stage.x + WALLINITIALX;
-  for (
-    let i = WALLINITIALX;
-    i < end_of_stage - WALLXINTERVAL;
-    i += WALLXINTERVAL
-  ) {
-    let rando = get_random_gap();
-    wall_man.add(i, rando);
-  }
+  add_initial_walls();
   target_wall = wall_man.get(0);
-  second_target_wall = wall_man.get(1);
 
   target_marker = new PIXI.Graphics();
   target_marker.beginFill(0x0000ff);
-  target_marker.drawRect(0, 0, 5, 5);
+  target_marker.drawRect(0, 0, 8, 8);
   other_man.add(target_marker);
 
   if (target_wall) {
-    let centered_pos = get_centered_pos(
-      target_marker,
-      target_wall.get_gap_bottom()
-    );
-    target_marker.x = centered_pos.x;
-    target_marker.y = centered_pos.y;
+    set_target_marker_pos(target_wall);
   }
 
   score = 0;
@@ -177,9 +173,10 @@ function step(delta) {
 
   // adds wall if reach set distance interval
   let end_of_stage = game_stage.pivot.x + game_stage.x - WALLINITIALX;
-  if (end_of_stage % WALLXINTERVAL == 0) {
+  if (end_of_stage % WALLXINTERVAL == 0 && end_of_stage > SIMWIDTH) {
     let rando = get_random_gap();
     wall_man.add(game_stage.pivot.x + game_stage.x, rando);
+    console.log(end_of_stage);
   }
 
   // remove the leftmost wall if not on stage
@@ -226,15 +223,9 @@ function step(delta) {
     ++score;
     let bird = bird_man.get_living_bird();
     target_wall = get_next_object_ahead(bird, wall_man.get_all());
-    second_target_wall = get_next_object_ahead(target_wall, wall_man.get_all());
 
     if (target_wall) {
-      centered_pos = get_centered_pos(
-        target_marker,
-        target_wall.get_gap_bottom()
-      );
-      target_marker.x = centered_pos.x;
-      target_marker.y = centered_pos.y;
+      set_target_marker_pos(target_wall);
     }
   }
 
@@ -244,21 +235,39 @@ function step(delta) {
     play_sound("bird-score");
   }
 
-  if (target_wall && second_target_wall) {
+  if (target_wall) {
     for (let i = 0; i < bird_man.size(); ++i) {
       let bird = bird_man.get(i);
       if (!bird.alive) continue;
       let nn = bird.brain;
-      //let dist_from_ceil = bird.y;
-      //let dist_from_floor = APPHEIGHT - (bird.y + bird.height);
       let alpha = nn.predict(
         bird.yv,
-        bird.get_dist_from_target_wall(target_wall),
-        bird.get_dist_from_target_wall(second_target_wall).y
+        bird.get_dist_from_target_wall(target_wall)
       );
       if (alpha > 0.5) bird.jump();
     }
   }
+}
+
+function add_initial_walls() {
+  for (
+    let i = WALLINITIALX;
+    i < SIMWIDTH;
+    i += WALLXINTERVAL
+  ) {
+    let rando = get_random_gap();
+    wall_man.add(i, rando);
+    console.log(i);
+  }
+}
+
+function set_target_marker_pos(target_wall) {
+  let centered_pos = get_centered_pos(
+    target_marker,
+    target_wall.get_gap_bottom()
+  );
+  target_marker.x = centered_pos.x - target_wall.width / 2;
+  target_marker.y = centered_pos.y - WALLGAPHEIGHT / 2;
 }
 
 // runs when all birds dead
@@ -275,15 +284,17 @@ function check_failed_generation() {
 // resets the stage
 function reset() {
   stop_all_sounds();
+  /*
   let failed_generation = check_failed_generation();
 
   if (!failed_generation) {
+    */
     update_history();
     evolve_birds();
 
     ++generation;
     update_text();
-  }
+  //}
 
   wall_man.clear();
   bird_man.clear();

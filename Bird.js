@@ -3,7 +3,8 @@ const BIRDHEIGHT = 20;
 const BIRDXV = 2;
 const GRAVITY = .8;
 const BIRDMAXYV = 90;
-//const BIRDJUMPV = -8;
+const ACCELERATING_JUMP = false;
+const BIRDJUMPV = -12;
 const BIRDJUMPACC = -2;
 const BIRDDEATHCOLOR = '0x7c0a02';
 
@@ -20,6 +21,7 @@ class Bird extends PIXI.Sprite {
         this.y = y;
         this.width = BIRDWIDTH;
         this.height = BIRDHEIGHT;
+        this.accelerating_jump = ACCELERATING_JUMP;
         this.xv = BIRDXV;
         this.yv = 0;
         this.alive = true;
@@ -65,8 +67,11 @@ class Bird extends PIXI.Sprite {
         //play_sound("game-over");
     }
     jump() {
-        //this.yv = BIRDJUMPV;
-        this.yv += BIRDJUMPACC;
+        if (this.accelerating_jump) {
+            this.yv += BIRDJUMPACC;
+        } else {
+            this.yv = BIRDJUMPV;
+        }
         //play_sound("bird-jump");
     }
 
