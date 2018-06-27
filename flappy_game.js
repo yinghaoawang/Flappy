@@ -27,9 +27,9 @@ app.stage.addChild(info_stage);
 
 // load random colors and init neural nets
 let set_colors = [];
-let nns = []; // neural nets array
+let neural_nets = [];
 for (let i = 0; i < BIRDCOUNT; ++i) {
-  nns[i] = new BirdNeuralNetwork(i);
+  neural_nets[i] = new BirdNeuralNetwork(i);
   set_colors[i] = get_random_hex_color();
 }
 
@@ -46,7 +46,6 @@ let other_man = new ObjectManager(game_stage);
 let target_wall = null;
 let score = 0;
 let generation = 0;
-//let use_ai = true;
 let history = [];
 
 init();
@@ -60,18 +59,14 @@ function init() {
   rkey.press = () => reset();
 
   for (let i = 0; i < BIRDCOUNT; ++i) {
-    bird_man.add(10, SIMHEIGHT / 2, set_colors[i], nns[i]);
+    bird_man.add(10, SIMHEIGHT / 2, set_colors[i], neural_nets[i]);
   }
-
-  let bird = bird_man.get(0);
 
   game_stage.pivot.x = CAMERAOFFSET;
   add_initial_walls();
   target_wall = wall_man.get(0);
 
-  target_marker = new PIXI.Graphics();
-  target_marker.beginFill(0x0000ff);
-  target_marker.drawRect(0, 0, 8, 8);
+  init_marker();
   other_man.add(target_marker);
 
   if (target_wall) {
@@ -80,6 +75,100 @@ function init() {
 
   score = 0;
   update_text();
+}
+
+// game loop
+function step(delta) {
+  // if all birds are dead then do stuff
+  if (!bird_man.has_living_bird()) {
+    do_on_dead_birds();
+    return;
+  }
+
+  // all birds step
+  bird_man.step_all();
+
+  // pans stage
+  game_stage.pivot.x += BIRDXV;
+
+  // adds wall if reach set distance interval
+  step_add_walls();
+
+  // remove the leftmost wall if not on stage
+  let wall = wall_man.get(0);
+  if (wall && !is_on_stage(game_stage, wall) && wall_man.size() > 1) {
+    wall_man.remove(0);
+  }
+
+  /* checks if any bird is off stage or crashing into the nearest wall or passes a wall */
+  let target_passed = false; // used to move target marker later
+  for (let i = 0; i < bird_man.size(); ++i) {
+    let bird = bird_man.get(i);
+    if (!bird.alive) continue;
+
+    // checks if bird hits ground or target wall (dies)
+    if (check_bird_fatal(bird)) {
+      bird.kill();
+      if (target_wall) {
+        bird.fitness -= get_fitness_penalty(bird);
+      }
+      if (!bird_man.has_living_bird()) return;
+    }
+
+    // checks if bird passes target wall (+score)
+    if (target_wall && bird.x > target_wall.x + target_wall.width) {
+      target_passed = true;
+      bird.pass_wall();
+    }
+  }
+
+  // moves the target marker to next target wall
+  if (!target_wall || target_passed) {
+    let bird = bird_man.get_living_bird();
+    target_wall = get_next_object_ahead(bird, wall_man.get_all());
+
+    if (target_wall) {
+      set_target_marker_pos(target_wall);
+    }
+  }
+
+  if (target_passed) {
+    ++score;
+    update_text();
+    play_sound("bird-score");
+  }
+
+  // use bird's neural network to determine actions
+  for (let i = 0; i < bird_man.size(); ++i) {
+    let bird = bird_man.get(i);
+    if (!bird.alive) continue;
+    bird_predict_act(bird);
+  }
+}
+
+function bird_predict_act(bird) {
+  let nn = bird.brain;
+  let alpha = nn.predict(bird.yv, bird.get_dist_from_target_wall(target_wall));
+  if (alpha > 0.5) bird.jump();
+}
+
+// resets the stage
+function reset() {
+  stop_all_sounds();
+  update_history();
+  evolve_birds();
+
+  ++generation;
+  update_text();
+
+  wall_man.clear();
+  bird_man.clear();
+  other_man.clear();
+
+  reset_ticker();
+  unbind_keys();
+
+  init();
 }
 
 function evolve_birds() {
@@ -118,8 +207,8 @@ function evolve_birds() {
     console.log("made babies with " + mating_pool[partner_index].brain.index);
 
     let index = bird.brain.index;
-    nns[index] = new_brain;
-    bird.brain = nns[index];
+    neural_nets[index] = new_brain;
+    bird.brain = neural_nets[index];
   }
 
   // mutation
@@ -134,93 +223,8 @@ function evolve_birds() {
     let bird = birds[i];
     let index = bird.brain.index;
     let new_brain = new BirdNeuralNetwork(index);
-    nns[index] = new_brain;
-    bird.brain = nns[index];
-  }
-}
-
-// game loop
-function step(delta) {
-  // if all birds are dead then evolve brains and reset stage
-  if (!bird_man.has_living_bird()) {
-    do_on_dead_birds();
-    return;
-  }
-
-  // move birds and stage
-  bird_man.step_all();
-  pan_stage();
-
-  // adds wall if reach set distance interval
-  step_add_walls();
-
-  // remove the leftmost wall if not on stage
-  let wall = wall_man.get(0);
-  if (wall && !is_on_stage(game_stage, wall) && wall_man.size() > 1) {
-    wall_man.remove(0);
-  }
-
-  /* checks if any bird is off stage or crashing into the nearest wall or passes a wall */
-  let target_passed = false; // used to move target marker later
-  for (let i = 0; i < bird_man.size(); ++i) {
-    let bird = bird_man.get(i);
-    if (!bird.alive) continue;
-
-    // checks if bird hits ground or target wall (dies)
-    let bird_collides_with_wall =
-      target_wall && target_wall.collidesWithObj(bird);
-    let bird_hit_ground = bird.y + bird.height > SIMHEIGHT;
-    let bird_hit_roof = bird.y < 0;
-    if (bird_collides_with_wall || bird_hit_ground || bird_hit_roof) {
-      bird.kill();
-      if (target_wall) {
-        let fitness_penalty =
-          (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) /
-          WALLXINTERVAL;
-        fitness_penalty +=
-          bird.get_dist_from_target_wall(target_wall).y / SIMHEIGHT;
-        bird.fitness -= fitness_penalty;
-      }
-      if (!bird_man.has_living_bird()) return;
-    }
-
-    // checks if bird passes target wall (+score)
-    let is_bird_pass_target_wall =
-      target_wall && bird.x > target_wall.x + target_wall.width;
-    if (is_bird_pass_target_wall) {
-      target_passed = true;
-      bird.pass_wall();
-    }
-  }
-
-  // moves the target marker to next target wall
-  if (!target_wall || target_passed) {
-    ++score;
-    let bird = bird_man.get_living_bird();
-    target_wall = get_next_object_ahead(bird, wall_man.get_all());
-
-    if (target_wall) {
-      set_target_marker_pos(target_wall);
-    }
-  }
-
-  if (target_passed) {
-    //++score;
-    update_text();
-    play_sound("bird-score");
-  }
-
-  if (target_wall) {
-    for (let i = 0; i < bird_man.size(); ++i) {
-      let bird = bird_man.get(i);
-      if (!bird.alive) continue;
-      let nn = bird.brain;
-      let alpha = nn.predict(
-        bird.yv,
-        bird.get_dist_from_target_wall(target_wall)
-      );
-      if (alpha > 0.5) bird.jump();
-    }
+    neural_nets[index] = new_brain;
+    bird.brain = neural_nets[index];
   }
 }
 
@@ -232,12 +236,23 @@ function add_initial_walls() {
   }
 }
 
+function init_marker() {
+  target_marker = new PIXI.Graphics();
+  target_marker.beginFill(0x0000ff);
+  target_marker.drawRect(0, 0, 8, 8);
+}
+
+function check_bird_fatal(bird) {
+  let bird_collides_with_wall =
+    target_wall && target_wall.collidesWithObj(bird);
+  let bird_hit_ground = bird.y + bird.height > SIMHEIGHT;
+  let bird_hit_roof = bird.y < 0;
+  return bird_collides_with_wall || bird_hit_ground || bird_hit_roof;
+}
+
 function step_add_walls() {
   let end_of_stage = game_stage.pivot.x + game_stage.x + WALLINITIALX;
-  if (
-    end_of_stage % WALLXINTERVAL == 0
-  ) {
-    
+  if (end_of_stage % WALLXINTERVAL == 0) {
     let adjusted_x = end_of_stage + (WALLINITIALX - WALLXINTERVAL);
     let rando = get_random_gap();
     wall_man.add(adjusted_x, rando);
@@ -257,36 +272,6 @@ function set_target_marker_pos(target_wall) {
 function do_on_dead_birds() {
   spacekey.press = null;
   reset();
-}
-
-// checks if no birds passed
-function check_failed_generation() {
-  return score <= 0;
-}
-
-// resets the stage
-function reset() {
-  stop_all_sounds();
-  /*
-  let failed_generation = check_failed_generation();
-
-  if (!failed_generation) {
-    */
-  update_history();
-  evolve_birds();
-
-  ++generation;
-  update_text();
-  //}
-
-  wall_man.clear();
-  bird_man.clear();
-  other_man.clear();
-
-  reset_ticker();
-  unbind_keys();
-
-  init();
 }
 
 function update_history() {
@@ -329,6 +314,14 @@ function update_text() {
   generation_elem.innerText = generation;
 }
 
+function get_fitness_penalty(bird) {
+  let fitness_penalty =
+    (bird.get_dist_from_target_wall(target_wall).x - target_wall.width) /
+    WALLXINTERVAL;
+  fitness_penalty += bird.get_dist_from_target_wall(target_wall).y / SIMHEIGHT;
+  return fitness_penalty;
+}
+
 // gets first object in array that is in front of object in terms of x and width
 function get_next_object_ahead(object, array) {
   if (object == undefined) {
@@ -347,11 +340,6 @@ function get_next_object_ahead(object, array) {
 // gets y position for a gap for wall creation
 function get_random_gap() {
   return WALLGAPHEIGHT + 10 + Math.random() * (SIMHEIGHT - WALLGAPHEIGHT - 10);
-}
-
-// make stage follow any living bird
-function pan_stage() {
-  game_stage.pivot.x += BIRDXV;
 }
 
 function init_table() {
