@@ -2,7 +2,7 @@
 const SIMWIDTH = 800;
 const SIMHEIGHT = 600;
 const INFOWIDTH = SIMWIDTH;
-const INFOHEIGHT = 300;
+const INFOHEIGHT = 340;
 const INFOBGCOLOR = 0x555555;
 const APPWIDTH = SIMWIDTH;
 const APPHEIGHT = SIMHEIGHT + INFOHEIGHT;
@@ -13,7 +13,7 @@ const CAMERAOFFSET = 290;
 const INFOMAXGEN = 5;
 
 // bird constants
-const BIRDCOUNT = 8;
+const BIRDCOUNT = 14;
 const BIRDWIDTH = 20;
 const BIRDHEIGHT = 20;
 const BIRDXV = 2;

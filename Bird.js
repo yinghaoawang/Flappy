@@ -3,7 +3,7 @@ class Bird extends PIXI.Sprite {
         super(PIXI.Texture.WHITE);
         //super(new PIXI.Texture.fromImage('bird.png'));
         if (color != undefined) {
-            this.tint = '0x' + color.substring(1);
+            this.tint = hash_to_hex(color);
             this.color = color;
         } else {
             this.color = "#ffffff";

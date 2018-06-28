@@ -3,6 +3,7 @@ class BirdInfoTable extends PIXI.Container {
     super();
     this.max_width = width;
     this.max_height = height;
+    this.set_colors = set_colors;
     this.row_header = [];
     this.col_header = [];
     this.cells = [];
@@ -22,8 +23,16 @@ class BirdInfoTable extends PIXI.Container {
       let cell = new PIXI.Container();
       cell.x = 0;
       cell.y = (i + 1) * cell_height;
-      let text = new PIXI.Text(i + 1);
-      cell.addChild(text);
+      let text_value = i + 1;
+      let gen_text_font = {
+        fontFamily: "Times New Roman",
+        fontSize: 20,
+        align: "center"
+      };
+      let text_obj = new PIXI.Text(text_value, gen_text_font);
+      text_obj.x = cell_width / 2;
+      text_obj.y = cell_height / 4;
+      cell.addChild(text_obj);
       this.row_header.push(cell);
       this.addChild(cell);
     }
@@ -36,9 +45,14 @@ class BirdInfoTable extends PIXI.Container {
       let cell = new PIXI.Container();
       cell.x = (i + 1) * cell_width;
       cell.y = 0;
+      // preview bird with rect
       let rect = new PIXI.Graphics();
-      rect.beginFill(0xff0000);
+      console.log(set_colors);
+      let bird_color = hash_to_hex(this.set_colors[i]);
+      rect.beginFill(bird_color);
       rect.drawRect(0, 0, BIRDWIDTH, BIRDHEIGHT);
+      rect.x = cell_width / 4;
+      rect.y = cell_height / 4;
       cell.addChild(rect);
       this.col_header.push(cell);
       this.addChild(cell);
@@ -55,8 +69,8 @@ class BirdInfoTable extends PIXI.Container {
         cell.y = (i + 1) * cell_width;
         cell.x = (j + 1) * cell_height;
         let rect = new PIXI.Graphics();
-        rect.beginFill(0x00ff00);
-        rect.drawRect(0, 0, BIRDWIDTH, BIRDHEIGHT);
+        rect.beginFill(hash_to_hex(get_random_hex_color()));
+        rect.drawRect(0, 0, cell_width, cell_height);
         cell.addChild(rect);
         this.cells[i][j] = cell;
         this.addChild(cell);

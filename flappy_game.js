@@ -190,7 +190,7 @@ function evolve_birds() {
     i < birds.length * kill_cutoff;
     ++i
   ) {
-    let bird = birds[i];
+    let bird = birds[Math.floor(i)];
     let partner_index = Math.floor(Math.random() * mating_pool.length);
     let partner = mating_pool[partner_index];
 

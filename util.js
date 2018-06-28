@@ -31,6 +31,10 @@ function get_dist_x_y(obj) {
     return Math.sqrt(Math.pow(obj.x, 2) + Math.pow(obj.y, 2));
 }
 
+function hash_to_hex(hash) {
+  return '0x' + hash.substring(1);
+}
+
 // pseudo normal distro
 function random_gaussian() {
   return (
