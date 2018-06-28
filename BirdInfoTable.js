@@ -28,7 +28,7 @@ class BirdInfoTable extends PIXI.Container {
       let gen_text_font = {
         fontFamily: "Times New Roman",
         fontSize: 20,
-        align: "center"
+        align: "right"
       };
       let text_obj = new PIXI.Text(text_value, gen_text_font);
       text_obj.x = cell_width / 2;

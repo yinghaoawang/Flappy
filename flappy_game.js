@@ -96,6 +96,7 @@ function step(delta) {
   for (let i = 0; i < bird_man.size(); ++i) {
     let bird = bird_man.get(i);
     if (!bird.alive) continue;
+    bird.fitness += .005;
 
     // checks if bird hits ground or target wall (dies)
     if (check_bird_fatal(bird)) {
