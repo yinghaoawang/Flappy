@@ -5,6 +5,6 @@ This is a Flappy Bird clone on Javascript using the Pixijs library.
 I use neural networks with genetic algorithms (as opposed to backpropagation) to evolve populations
 of birds to play the game. Inspired by this [youtube video](https://www.youtube.com/watch?v=aeWmdojEJf0).
 
-- I use 4 inputs: vertical velocity (falling speed), horizontal distance from next wall gap, vertical distance from next wall gap, and vertical distance from next next wall gap (2 walls away)
-- a variable amount of hidden layers (trying out different ones)
+- I use 3 inputs: vertical velocity (falling speed), horizontal distance from next wall gap, vertical distance from next wall gap
+- a hidden layer
 - 1 output layer: decision to jump

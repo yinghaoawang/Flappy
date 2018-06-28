@@ -19,6 +19,7 @@ class Bird extends PIXI.Sprite {
         this.walls_passed = 0;
         this.steps_taken = 0;
         this.fitness = 0;
+        this.score = 0;
         this.brain = brain;
         this.alpha = 1;//.8;
     }
@@ -40,6 +41,7 @@ class Bird extends PIXI.Sprite {
     }
     pass_wall() {
         ++this.walls_passed;
+        ++this.score;
         this.fitness += WALLPASSFITNESSMULT;
     }
     step() {

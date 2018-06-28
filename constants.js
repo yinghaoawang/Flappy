@@ -13,7 +13,7 @@ const CAMERAOFFSET = 290;
 const INFOMAXGEN = 5;
 
 // bird constants
-const BIRDCOUNT = 14;
+const BIRDCOUNT = 10;
 const BIRDWIDTH = 20;
 const BIRDHEIGHT = 20;
 const BIRDXV = 2;

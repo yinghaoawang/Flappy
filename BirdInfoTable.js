@@ -7,7 +7,7 @@ class BirdInfoTable extends PIXI.Container {
     this.row_header = [];
     this.col_header = [];
     this.cells = [];
-    this.cell_width = 50;
+    this.cell_width = 70;
     this.cell_height = 50;
     this.rows = INFOMAXGEN;
     this.cols = BIRDCOUNT;
@@ -31,7 +31,7 @@ class BirdInfoTable extends PIXI.Container {
       };
       let text_obj = new PIXI.Text(text_value, gen_text_font);
       text_obj.x = cell_width / 2;
-      text_obj.y = cell_height / 4;
+      text_obj.y = 0;
       cell.addChild(text_obj);
       this.row_header.push(cell);
       this.addChild(cell);
@@ -47,7 +47,6 @@ class BirdInfoTable extends PIXI.Container {
       cell.y = 0;
       // preview bird with rect
       let rect = new PIXI.Graphics();
-      console.log(set_colors);
       let bird_color = hash_to_hex(this.set_colors[i]);
       rect.beginFill(bird_color);
       rect.drawRect(0, 0, BIRDWIDTH, BIRDHEIGHT);
@@ -66,15 +65,42 @@ class BirdInfoTable extends PIXI.Container {
       this.cells[i] = [];
       for (let j = 0; j < this.cols; ++j) {
         let cell = new PIXI.Container();
-        cell.y = (i + 1) * cell_width;
-        cell.x = (j + 1) * cell_height;
-        let rect = new PIXI.Graphics();
-        rect.beginFill(hash_to_hex(get_random_hex_color()));
-        rect.drawRect(0, 0, cell_width, cell_height);
-        cell.addChild(rect);
+        cell.y = (i + 1) * cell_height;
+        cell.x = (j + 1) * cell_width;
+        let cell_text_font = {
+          fontFamily: "serif",
+          fontSize: 10,
+          align: "left"
+        };
+        let text = new PIXI.Text("blank", cell_text_font);
+        text.alpha = 0;
+        cell.addChild(text);
         this.cells[i][j] = cell;
         this.addChild(cell);
       }
+    }
+  }
+
+  update_gen(gen, data) {
+    if (gen - 1 < INFOMAXGEN) {
+      this.update_row(gen - 1, data);
+    } else {
+      this.update_row(0, data);
+    }
+  }
+  update_row(row, info) {
+    if (info.length != this.cols) {
+      console.error(
+        "Cannot update rows, nonmatching data length: " + info.length
+      );
+    }
+    for (let i = 0; i < this.cols; ++i) {
+      let cell = this.cells[row][i];
+      let text = cell.children[0];
+      text.alpha = 1;
+      let formatted_fitness = parseFloat(info[i].fitness).toFixed(2);
+      text.text =
+        "Fitness: " + formatted_fitness + "\n" + "Score: " + info[i].score;
     }
   }
 }

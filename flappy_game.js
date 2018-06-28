@@ -24,7 +24,7 @@ let bird_man = new BirdManager(game_stage);
 let other_man = new ObjectManager(game_stage);
 let target_wall = null;
 let score = 0;
-let generation = 0;
+let generation = 1;
 let history = [];
 
 // load random colors and init neural nets
@@ -37,12 +37,12 @@ for (let i = 0; i < BIRDCOUNT; ++i) {
 
 // set up info stage
 let info_stage = new PIXI.Container();
+let info_table = null;
 init_info_stage();
 
 init();
 
 function init() {
-  init_table();
   app.ticker.add(delta => step(delta));
   app.ticker.start();
 
@@ -135,6 +135,22 @@ function step(delta) {
     if (!bird.alive) continue;
     bird_nn_step(bird);
   }
+
+  let current_data = get_current_data();
+  info_table.update_gen(generation, current_data);
+}
+
+function get_current_data() {
+  let res = [];
+  let birds = bird_man.get_all();
+  for (let i = 0; i < birds.length; ++i) {
+    let bird = birds[i];
+    res[i] = {
+      'fitness': bird.fitness,
+      'score': bird.score
+    };
+  }
+  return res;
 }
 
 function bird_nn_step(bird) {
@@ -195,7 +211,7 @@ function evolve_birds() {
     let partner = mating_pool[partner_index];
 
     let new_brain = bird.cross_over(partner);
-    console.log("made babies with " + mating_pool[partner_index].brain.index);
+    //console.log("made babies with " + mating_pool[partner_index].brain.index);
 
     let index = bird.brain.index;
     neural_nets[index] = new_brain;
@@ -279,7 +295,7 @@ function update_history() {
     ow = ow.map(round_fn);
     let bird_data = {
       fitness: round_fn(bird.fitness),
-      color: bird.color,
+      score: bird.score,
       input_weights: iw,
       output_weights: ow
     };
@@ -356,89 +372,8 @@ function init_info_stage() {
 
   info_stage.addChild(info_inner_container);
 
-  let info_table = new BirdInfoTable(iic_width, iic_height, set_colors);
+  info_table = new BirdInfoTable(iic_width, iic_height, set_colors);
   info_inner_container.addChild(info_table);
 
   app.stage.addChild(info_stage);
-}
-
-function init_table() {
-  /*
-  let table = `
-  <table border="1" style="table-layout: fixed">
-  <thead>
-  <tr>
-    <th>Bird</th>`;
-  for (let i = 0; i < generation; ++i) {
-    table += `<th>Gen ${i}</th>`;
-  }
-  table += `</tr></thead>`;
-
-  table += "<tbody>";
-  for (let i = 0; i < BIRDCOUNT; ++i) {
-    table += "<tr>";
-    table += `<td>${i}</td>`;
-
-    for (let g = 0; g < generation; ++g) {
-      let s_bird = history[g][i];
-      let iwval = s_bird.input_weights.toString();
-      let owval = s_bird.output_weights.toString();
-      let iwlen = s_bird.input_weights.length;
-      let owlen = s_bird.output_weights.length;
-      if (g > 0 && s_bird.fitness > 0 && history[g - 1][i].fitness > 0) {
-        iwval = "";
-        owval = "";
-        ps_bird = history[g - 1][i];
-        for (let j = 0; j < iwlen; ++j) {
-          if (s_bird.input_weights[j] > ps_bird.input_weights[j]) {
-            iwval +=
-              "<span style='background-color: green'>" +
-              s_bird.input_weights[j] +
-              "</span>";
-          } else if (s_bird.input_weights[j] < ps_bird.input_weights[j]) {
-            iwval +=
-              "<span style='background-color: red'>" +
-              s_bird.input_weights[j] +
-              "</span>";
-          } else {
-            iwval += s_bird.input_weights[j];
-          }
-        }
-        for (let j = 0; j < owlen; ++j) {
-          if (s_bird.output_weights[j] > ps_bird.output_weights[j]) {
-            owval +=
-              "<span style='background-color: green'>" +
-              s_bird.output_weights[j] +
-              "</span>";
-          } else if (s_bird.output_weights[j] < ps_bird.output_weights[j]) {
-            owval +=
-              "<span style='background-color: red'>" +
-              s_bird.output_weights[j] +
-              "</span>";
-          } else {
-            owval += s_bird.output_weights[j];
-          }
-          if (j > 0 && j % 4 == 0) owval += "<br/>";
-        }
-      }
-      let fitness = history[g][i].fitness;
-      let fitness_color = "white";
-      if (fitness > 0) fitness_color = "green";
-      else if (g > 0 && history[g - 1][i].fitness > 0) fitness_color = "red";
-      table += `
-      <td>
-        color: <font color='${history[g][i].color}'>██████</font><br/>
-        fitness: <span style='background-color: ${fitness_color}'>${fitness}</span><br/>
-        iw: ${iwval}<br/>
-        ow: ${owval}<br/>
-      </td>
-    `;
-    }
-    table += "</tr>";
-  }
-  table += "</tbody></table>";
-
-  let table_holder = document.getElementById("table-holder");
-  table_holder.innerHTML = table;
-  */
 }
