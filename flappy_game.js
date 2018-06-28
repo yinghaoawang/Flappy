@@ -17,7 +17,6 @@ let rkey = keyboard(82);
 let spacekey = keyboard(32);
 
 // globals
-let bird = null;
 let target_marker = null;
 let wall_man = new WallManager(game_stage);
 let bird_man = new BirdManager(game_stage);
