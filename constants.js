@@ -1,5 +1,5 @@
 // game constants
-const SIMWIDTH = 900;
+const SIMWIDTH = 800;
 const SIMHEIGHT = 600;
 const INFOWIDTH = SIMWIDTH;
 const INFOHEIGHT = 300;
@@ -8,6 +8,9 @@ const APPWIDTH = SIMWIDTH;
 const APPHEIGHT = SIMHEIGHT + INFOHEIGHT;
 const BACKGROUNDCOLOR = 0xefefef;
 const CAMERAOFFSET = 290;
+
+// info table constants
+const INFOMAXGEN = 5;
 
 // bird constants
 const BIRDCOUNT = 8;

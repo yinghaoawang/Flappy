@@ -12,27 +12,6 @@ game_stage.x = app.renderer.width / 2;
 game_stage.y = 0;
 app.stage.addChild(game_stage);
 
-// set up info stage
-let info_stage = new PIXI.Container();
-info_stage.width = INFOWIDTH;
-info_stage.height = INFOHEIGHT;
-info_stage.x = 0;
-info_stage.y = SIMHEIGHT;
-let info_bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-info_bg.width = INFOWIDTH;
-info_bg.height = INFOHEIGHT;
-info_bg.tint = INFOBGCOLOR;
-info_stage.addChild(info_bg);
-app.stage.addChild(info_stage);
-
-// load random colors and init neural nets
-let set_colors = [];
-let neural_nets = [];
-for (let i = 0; i < BIRDCOUNT; ++i) {
-  neural_nets[i] = new BirdNeuralNetwork(i);
-  set_colors[i] = get_random_hex_color();
-}
-
 // key set
 let rkey = keyboard(82);
 let spacekey = keyboard(32);
@@ -47,6 +26,18 @@ let target_wall = null;
 let score = 0;
 let generation = 0;
 let history = [];
+
+// load random colors and init neural nets
+let set_colors = [];
+let neural_nets = [];
+for (let i = 0; i < BIRDCOUNT; ++i) {
+  neural_nets[i] = new BirdNeuralNetwork(i);
+  set_colors[i] = get_random_hex_color();
+}
+
+// set up info stage
+let info_stage = new PIXI.Container();
+init_info_stage();
 
 init();
 
@@ -135,18 +126,18 @@ function step(delta) {
   if (target_passed) {
     ++score;
     update_text();
-    play_sound("bird-score");
+    //play_sound("bird-score");
   }
 
   // use bird's neural network to determine actions
   for (let i = 0; i < bird_man.size(); ++i) {
     let bird = bird_man.get(i);
     if (!bird.alive) continue;
-    bird_predict_act(bird);
+    bird_nn_step(bird);
   }
 }
 
-function bird_predict_act(bird) {
+function bird_nn_step(bird) {
   let nn = bird.brain;
   let alpha = nn.predict(bird.yv, bird.get_dist_from_target_wall(target_wall));
   if (alpha > 0.5) bird.jump();
@@ -340,6 +331,35 @@ function get_next_object_ahead(object, array) {
 // gets y position for a gap for wall creation
 function get_random_gap() {
   return WALLGAPHEIGHT + 10 + Math.random() * (SIMHEIGHT - WALLGAPHEIGHT - 10);
+}
+
+function init_info_stage() {
+  info_stage.width = INFOWIDTH;
+  info_stage.height = INFOHEIGHT;
+  info_stage.x = 0;
+  info_stage.y = SIMHEIGHT;
+  let info_bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+  info_bg.width = INFOWIDTH;
+  info_bg.height = INFOHEIGHT;
+  info_bg.tint = INFOBGCOLOR;
+  info_stage.addChild(info_bg);
+  let info_inner_container = new PIXI.Container();
+  let iic_padding = 10;
+  info_inner_container.x = iic_padding;
+  info_inner_container.y = iic_padding;
+  let iic_width = INFOWIDTH - 2 * iic_padding;
+  let iic_height = INFOHEIGHT - 2 * iic_padding;
+  let iic_bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+  iic_bg.width = iic_width;
+  iic_bg.height = iic_height;
+  info_inner_container.addChild(iic_bg);
+
+  info_stage.addChild(info_inner_container);
+
+  let info_table = new BirdInfoTable(iic_width, iic_height, set_colors);
+  info_inner_container.addChild(info_table);
+
+  app.stage.addChild(info_stage);
 }
 
 function init_table() {
