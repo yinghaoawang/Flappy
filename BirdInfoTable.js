@@ -11,6 +11,7 @@ class BirdInfoTable extends PIXI.Container {
     this.cell_height = 50;
     this.rows = INFOMAXGEN;
     this.cols = BIRDCOUNT;
+    this.low_gen = 1;
     this.init_row_header();
     this.init_col_header();
     this.init_cells();
@@ -81,13 +82,43 @@ class BirdInfoTable extends PIXI.Container {
     }
   }
 
-  update_gen(gen, data) {
-    if (gen - 1 < INFOMAXGEN) {
-      this.update_row(gen - 1, data);
-    } else {
-      this.update_row(0, data);
+  move_rows() {
+    // move row headers
+    for (let i = 0; i < this.rows; ++i) {
+        ++this.row_header[i].children[0].text;
+    }
+
+    // move cells
+    let prev = null;
+    let curr = null;
+    for (let i = 0; i < this.rows; ++i) {
+      if (i == 0) {
+        prev = this.cells[i];
+        continue;
+      }
+      curr = this.cells[i];
+      for (let j = 0; j < this.cols; ++j) {
+        let curr_cell = curr[j].children[0];
+        let prev_cell = prev[j].children[0];
+        prev_cell.text = curr_cell.text;
+      }
+
+      prev = this.cells[i];
     }
   }
+
+  update_gen(gen, data) {
+    if (gen - 1 < this.rows) {
+      this.update_row(gen - 1, data);
+    } else {
+      if (gen + 1 - this.rows > this.low_gen) {
+          this.move_rows();
+          ++this.low_gen;
+      }
+      this.update_row(this.rows - 1, data);
+    }
+  }
+
   update_row(row, info) {
     if (info.length != this.cols) {
       console.error(
