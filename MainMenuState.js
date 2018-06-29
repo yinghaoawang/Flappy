@@ -1,8 +1,10 @@
 class MainMenuState extends State {
   constructor() {
     super();
+    this.start_function = undefined;
   }
   on_enter() {
+    this.main_container = new PIXI.Container();
     this.title_label = new PIXI.Text("Flappy Bot", {
       fontFamily: "Times New Roman",
       fontSize: 50
@@ -10,7 +12,7 @@ class MainMenuState extends State {
     this.title_label.x = APPWIDTH * 0.5;
     this.title_label.y = APPHEIGHT * 0.1;
     this.title_label.anchor.set(0.5);
-    app.stage.addChild(this.title_label);
+    this.main_container.addChild(this.title_label);
 
     let menu_x = APPWIDTH * 0.5;
     let menu_y = APPHEIGHT * 0.3;
@@ -23,11 +25,17 @@ class MainMenuState extends State {
       menu_height,
       "Start"
     );
-    app.stage.addChild(this.start_button);
-    this.start_button.click = (e) => {
-      console.log("hello " + e);
-    };
+    this.main_container.addChild(this.start_button);
+    if (this.start_function != undefined) {
+        this.start_button.click = this.start_function;
+    }
+    app.stage.addChild(this.main_container);
   }
-  on_exit() {}
+  on_exit() {
+      app.stage.removeChild(this.main_container);
+  }
+  set_start_function(fn) {
+    this.start_function = fn;
+  }
   update() {}
 }
