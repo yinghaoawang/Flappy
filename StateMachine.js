@@ -5,6 +5,8 @@ class StateMachine {
     push(state) {
         state.on_enter();
         this.game_states.push(state);
+        app.ticker.add(state.update, state);
+        app.ticker.start();
     }
     pop() {
         let top = this.peek();
@@ -13,6 +15,7 @@ class StateMachine {
         }
         top.on_exit();
         this.game_states.pop();
+        app.ticker.remove(top.update, top);
     }
     peek() {
         let index = this.game_states.length - 1;

@@ -36,17 +36,28 @@ class GameState extends State {
 
     this.init();
   }
-  on_exit() {}
+  on_exit() {
+    this.target_marker = null;
+    this.target_wall = null;
+    this.wall_man = null;
+    this.bird_man = null;
+    this.other_man = null;
+    if (this.bird_man) this.bird_man.clear();
+    if (this.wall_man) this.wall_man.clear();
+    if (this.other_man) this.other_man.clear();
+    this.score = 0;
+    this.generation = 1;
+    this.history = [];
+    this.unbind_keys();
+    app.stage.removeChild(this.game_stage);
+  }
+
   update() {
     this.step();
-    console.log(this);
   }
-  init() {
-    app.ticker.add(() => this.update());
-    app.ticker.start();
 
-    //spacekey.press = () => bird.jump();
-    rkey.press = () => reset();
+  init() {
+    rkey.press = () => this.reset();
 
     for (let i = 0; i < BIRDCOUNT; ++i) {
       this.bird_man.add(
@@ -73,7 +84,7 @@ class GameState extends State {
   }
 
   // game loop
-  step(delta) {
+  step() {
     // if all birds are dead then do stuff
     if (!this.bird_man.has_living_bird()) {
       this.do_on_dead_birds();
@@ -301,7 +312,6 @@ class GameState extends State {
 
   // runs when all birds dead
   do_on_dead_birds() {
-    spacekey.press = null;
     this.reset();
   }
 
@@ -328,12 +338,11 @@ class GameState extends State {
   }
 
   reset_ticker() {
-    app.ticker.stop();
-    app.ticker = new PIXI.ticker.Ticker();
+    app.ticker.remove(this.update, this);
+    app.ticker.add(this.update, this);
   }
 
   unbind_keys() {
-    spacekey.press = null;
     rkey.press = null;
   }
 
