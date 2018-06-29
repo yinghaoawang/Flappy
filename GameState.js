@@ -67,6 +67,7 @@ class GameState extends State {
     gray_bg.beginFill(0x000000);
     gray_bg.drawRect(0, 0, APPWIDTH, APPHEIGHT);
     gray_bg.alpha = .6;
+    gray_bg.delete_on_resume = true;
     this.game_container.addChild(gray_bg);
     app.ticker.update();
 
@@ -74,9 +75,15 @@ class GameState extends State {
   }
 
   resume() {
+    // delete all gray backgrounds
+    for (let i = 0; i < this.game_container.children.length; ++i) {
+      let obj = this.game_container.children[i];
+      if (obj.delete_on_resume === true) {
+        this.game_container.removeChildAt(i);
+        --i;
+      }
+    }
     pkey.press = () => this.pause();
-    let gray_bg_index = this.game_container.children.length - 1;
-    this.game_container.removeChildAt(gray_bg_index);
     app.ticker.start();
   }
 
