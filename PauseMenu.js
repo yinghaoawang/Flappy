@@ -9,7 +9,7 @@ class PauseMenu extends PIXI.Container {
     this.addChild(gray_bg);
 
     let ic_width = width * 0.4;
-    let ic_height = height * 0.6;
+    let ic_height = height * 0.5;
 
     this.inner_container = new PIXI.Container();
     this.inner_container.x = width / 2;
@@ -24,10 +24,22 @@ class PauseMenu extends PIXI.Container {
     this.background.drawRect(0, 0, ic_width, ic_height);
     this.inner_container.addChild(this.background);
 
-    this.mm_button = new MenuButton(ic_width * .5, ic_height * .15, ic_width * .8, ic_height * .15, "Main Menu");
+    let btn_x = ic_width * .5;
+    let btn_y_offset = ic_height * .15;
+    let btn_y_mult = ic_height * .225;
+    let btn_width = ic_width * .8;
+    let btn_height = ic_height * .15;
+
+    this.mm_button = new MenuButton(btn_x, btn_y_offset, btn_width, btn_height, "Main Menu");
     this.inner_container.addChild(this.mm_button);
 
-    this.resume_button = new MenuButton(ic_width * .5, ic_height * .35, ic_width * .8, ic_height * .15, "Resume");
+    this.resume_button = new MenuButton(btn_x, btn_y_offset + btn_y_mult, btn_width, btn_height, "Resume");
     this.inner_container.addChild(this.resume_button);
+
+    this.reset_button = new MenuButton(btn_x, btn_y_offset + (2 * btn_y_mult), btn_width, btn_height, "Kill Birds");
+    this.inner_container.addChild(this.reset_button);
+
+    this.hard_reset_button = new MenuButton(btn_x, btn_y_offset + (3 * btn_y_mult), btn_width, btn_height, "Reset");
+    this.inner_container.addChild(this.hard_reset_button);
   }
 }

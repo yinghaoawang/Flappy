@@ -198,7 +198,13 @@ class GameState extends State {
     if (alpha > 0.5) bird.jump();
   }
 
-  // resets the stage
+  // completely removes everything and reinits everything from scratch
+  hard_reset() {
+    this.on_exit();
+    this.on_enter();
+  }
+
+  // resets the stage (neural nets, etc. stay)
   reset() {
     stop_all_sounds();
     this.update_history();
@@ -287,6 +293,11 @@ class GameState extends State {
     pause_menu.delete_on_resume = true;
     // BAD CODE
     pause_menu.resume_button.click = this.resume.bind(this);
+    pause_menu.reset_button.click = () => {
+      this.reset();
+      this.resume();
+    };
+    pause_menu.hard_reset_button.click = this.hard_reset.bind(this);
     // SUPER BAD CODE BAD BAD BAD
     pause_menu.mm_button.click = () => {
       state_machine.pop();
