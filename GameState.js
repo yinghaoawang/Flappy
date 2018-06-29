@@ -7,6 +7,9 @@ class GameState extends State {
     this.game_container = new PIXI.Container();
     app.stage.addChild(this.game_container);
 
+    // game state
+    this.is_paused = false;
+
     // set up simulation stage
     this.sim_stage = new PIXI.Container();
     this.sim_stage.width = SIMWIDTH;
@@ -58,7 +61,7 @@ class GameState extends State {
   }
 
   update() {
-    this.step();
+    if (!this.is_paused) this.step();
   }
 
   init() {
@@ -283,20 +286,15 @@ class GameState extends State {
     let pause_menu = new PauseMenu(APPWIDTH, APPHEIGHT);
     pause_menu.delete_on_resume = true;
     // BAD CODE
-    //pause_menu.resume_button.click = this.resume();
+    pause_menu.resume_button.click = this.resume.bind(this);
     // SUPER BAD CODE BAD BAD BAD
-    /*
     pause_menu.mm_button.click = () => {
       state_machine.pop();
       state_machine.push(main_menu_state);
       main_menu_state.set_start_function(main_menu_link_fn);
     }
-    */
     this.game_container.addChild(pause_menu);
-
-    app.ticker.update();
-
-    app.ticker.stop();
+    this.is_paused = true;
   }
 
   resume() {
@@ -310,7 +308,7 @@ class GameState extends State {
     }
     pkey.press = () => this.pause();
     esckey.press = () => this.pause();
-    app.ticker.start();
+    this.is_paused = false;
   }
 
   add_initial_walls() {
