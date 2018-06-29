@@ -3,20 +3,24 @@ class GameState extends State {
     super();
   }
   on_enter() {
-    // set up game stage
-    this.game_stage = new PIXI.Container();
-    this.game_stage.width = SIMWIDTH;
-    this.game_stage.height = SIMHEIGHT;
-    app.stage.addChild(this.game_stage);
-    this.game_stage.x = app.renderer.width / 2;
-    this.game_stage.y = 0;
+    // set up main container
+    this.game_container = new PIXI.Container();
+    app.stage.addChild(this.game_container);
+
+    // set up simulation stage
+    this.sim_stage = new PIXI.Container();
+    this.sim_stage.width = SIMWIDTH;
+    this.sim_stage.height = SIMHEIGHT;
+    this.game_container.addChild(this.sim_stage);
+    this.sim_stage.x = app.renderer.width / 2;
+    this.sim_stage.y = 0;
 
     // globals
     this.target_marker = null;
     this.target_wall = null;
-    this.wall_man = new WallManager(this.game_stage);
-    this.bird_man = new BirdManager(this.game_stage);
-    this.other_man = new ObjectManager(this.game_stage);
+    this.wall_man = new WallManager(this.sim_stage);
+    this.bird_man = new BirdManager(this.sim_stage);
+    this.other_man = new ObjectManager(this.sim_stage);
     this.score = 0;
     this.generation = 1;
     this.history = [];
@@ -50,16 +54,35 @@ class GameState extends State {
     this.generation = 1;
     this.history = [];
     this.unbind_keys();
-    app.stage.removeChild(this.game_stage);
-    app.stage.removeChild(this.info_stage);
+    app.stage.removeChild(this.game_container);
   }
 
   update() {
     this.step();
   }
 
+  pause() {
+    pkey.press = () => this.resume();
+    let gray_bg = new PIXI.Graphics();
+    gray_bg.beginFill(0x000000);
+    gray_bg.drawRect(0, 0, APPWIDTH, APPHEIGHT);
+    gray_bg.alpha = .6;
+    this.game_container.addChild(gray_bg);
+    app.ticker.update();
+
+    app.ticker.stop();
+  }
+
+  resume() {
+    pkey.press = () => this.pause();
+    let gray_bg_index = this.game_container.children.length - 1;
+    this.game_container.removeChildAt(gray_bg_index);
+    app.ticker.start();
+  }
+
   init() {
     rkey.press = () => this.reset();
+    pkey.press = () => this.pause();
 
     for (let i = 0; i < BIRDCOUNT; ++i) {
       this.bird_man.add(
@@ -70,7 +93,7 @@ class GameState extends State {
       );
     }
 
-    this.game_stage.pivot.x = CAMERAOFFSET;
+    this.sim_stage.pivot.x = CAMERAOFFSET;
     this.add_initial_walls();
     this.target_wall = this.wall_man.get(0);
 
@@ -97,7 +120,7 @@ class GameState extends State {
     this.bird_man.step_all();
 
     // pans stage
-    this.game_stage.pivot.x += BIRDXV;
+    this.sim_stage.pivot.x += BIRDXV;
 
     // adds wall if reach set distance interval
     this.step_add_walls();
@@ -106,7 +129,7 @@ class GameState extends State {
     let wall = this.wall_man.get(0);
     if (
       wall &&
-      !is_on_stage(this.game_stage, wall) &&
+      !is_on_stage(this.sim_stage, wall) &&
       this.wall_man.size() > 1
     ) {
       this.wall_man.remove(0);
@@ -272,7 +295,7 @@ class GameState extends State {
 
   add_initial_walls() {
     let end_of_stage =
-      this.game_stage.pivot.x + this.game_stage.x + WALLINITIALX;
+      this.sim_stage.pivot.x + this.sim_stage.x + WALLINITIALX;
     for (let i = WALLINITIALX; i <= end_of_stage; i += WALLXINTERVAL) {
       let rando = this.get_random_gap();
       this.wall_man.add(i, rando);
@@ -295,7 +318,7 @@ class GameState extends State {
 
   step_add_walls() {
     let end_of_stage =
-      this.game_stage.pivot.x + this.game_stage.x + WALLINITIALX;
+      this.sim_stage.pivot.x + this.sim_stage.x + WALLINITIALX;
     if (end_of_stage % WALLXINTERVAL == 0) {
       let adjusted_x = end_of_stage + (WALLINITIALX - WALLXINTERVAL);
       let rando = this.get_random_gap();
@@ -346,6 +369,7 @@ class GameState extends State {
 
   unbind_keys() {
     rkey.press = null;
+    pkey.press = null;
   }
 
   // sets the store in the html
@@ -414,6 +438,6 @@ class GameState extends State {
     this.info_table = new BirdInfoTable(iic_width, iic_height, this.set_colors);
     info_inner_container.addChild(this.info_table);
 
-    app.stage.addChild(this.info_stage);
+    this.game_container.addChild(this.info_stage);
   }
 }

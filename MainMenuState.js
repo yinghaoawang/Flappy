@@ -36,6 +36,9 @@ class MainMenuState extends State {
   }
   set_start_function(fn) {
     this.start_function = fn;
+    if (this.start_button != undefined) {
+        this.start_button.click = this.start_function;
+    }
   }
   update() {}
 }
