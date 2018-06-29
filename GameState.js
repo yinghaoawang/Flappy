@@ -39,6 +39,7 @@ class GameState extends State {
   on_exit() {}
   update() {
     this.step();
+    console.log(this);
   }
   init() {
     app.ticker.add(() => this.update());
@@ -89,10 +90,10 @@ class GameState extends State {
     this.step_add_walls();
 
     // remove the leftmost wall if not on stage
-    this.wall = this.wall_man.get(0);
+    let wall = this.wall_man.get(0);
     if (
-      this.wall &&
-      !is_on_stage(this.game_stage, this.wall) &&
+      wall &&
+      !is_on_stage(this.game_stage, wall) &&
       this.wall_man.size() > 1
     ) {
       this.wall_man.remove(0);
