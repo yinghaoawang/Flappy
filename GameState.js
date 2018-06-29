@@ -36,6 +36,7 @@ class GameState extends State {
 
     this.init();
   }
+  
   on_exit() {
     this.target_marker = null;
     this.target_wall = null;
@@ -50,6 +51,7 @@ class GameState extends State {
     this.history = [];
     this.unbind_keys();
     app.stage.removeChild(this.game_stage);
+    app.stage.removeChild(this.info_stage);
   }
 
   update() {

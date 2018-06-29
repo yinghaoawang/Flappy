@@ -6,7 +6,6 @@ class StateMachine {
         state.on_enter();
         this.game_states.push(state);
         app.ticker.add(state.update, state);
-        app.ticker.start();
     }
     pop() {
         let top = this.peek();
