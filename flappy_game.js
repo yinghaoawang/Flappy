@@ -9,6 +9,7 @@ let rkey = keyboard(82);
 let spacekey = keyboard(32);
 let esckey = keyboard(27);
 let pkey = keyboard(80);
+let mkey = keyboard(77);
 
 // holds the states of the game
 let state_machine = new StateMachine();

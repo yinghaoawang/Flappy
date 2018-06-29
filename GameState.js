@@ -9,6 +9,7 @@ class GameState extends State {
 
     // game state
     this.is_paused = false;
+    this.is_muted = false;
 
     // set up simulation stage
     this.sim_stage = new PIXI.Container();
@@ -68,6 +69,7 @@ class GameState extends State {
     rkey.press = () => this.reset();
     pkey.press = () => this.pause();
     esckey.press = () => this.pause();
+    mkey.press = () => this.toggle_mute();
 
     for (let i = 0; i < BIRDCOUNT; ++i) {
       this.bird_man.add(
@@ -143,6 +145,7 @@ class GameState extends State {
       ) {
         target_passed = true;
         bird.pass_wall();
+        if (!this.is_muted) sounds['bird-score'].play();
       }
     }
 
@@ -195,7 +198,9 @@ class GameState extends State {
       bird.yv,
       bird.get_dist_from_target_wall(this.target_wall)
     );
-    if (alpha > 0.5) bird.jump();
+    if (alpha > 0.5) {
+      bird.jump();
+    }
   }
 
   // completely removes everything and reinits everything from scratch
@@ -322,6 +327,10 @@ class GameState extends State {
     this.is_paused = false;
   }
 
+  toggle_mute() {
+    this.is_muted = !this.is_muted;
+  }
+
   add_initial_walls() {
     let end_of_stage =
       this.sim_stage.pivot.x + this.sim_stage.x + WALLINITIALX;
@@ -400,6 +409,7 @@ class GameState extends State {
     rkey.press = null;
     pkey.press = null;
     esckey.press = null;
+    mkey.press = null;
   }
 
   // sets the store in the html

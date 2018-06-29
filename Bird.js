@@ -56,7 +56,6 @@ class Bird extends PIXI.Sprite {
     }
     kill() {
         this.alive = false;
-        //play_sound("game-over");
     }
     jump() {
         if (this.accelerating_jump) {
@@ -64,7 +63,6 @@ class Bird extends PIXI.Sprite {
         } else {
             this.yv = BIRDJUMPV;
         }
-        //play_sound("bird-jump");
     }
 
     // for genetics, mutates brain
