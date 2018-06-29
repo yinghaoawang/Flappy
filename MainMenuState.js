@@ -14,15 +14,11 @@ class MainMenuState extends State {
     this.title_label.anchor.set(0.5);
     this.main_container.addChild(this.title_label);
 
-    let menu_x = APPWIDTH * 0.5;
-    let menu_y = APPHEIGHT * 0.3;
-    let menu_width = APPWIDTH * 0.6;
-    let menu_height = APPWIDTH * 0.15;
     this.start_button = new MenuButton(
-      menu_x,
-      menu_y,
-      menu_width,
-      menu_height,
+      APPWIDTH * 0.5,
+      APPHEIGHT * 0.3,
+      APPWIDTH * 0.6,
+      APPWIDTH * 0.15,
       "Start"
     );
     this.main_container.addChild(this.start_button);

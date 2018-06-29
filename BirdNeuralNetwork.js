@@ -1,4 +1,5 @@
 class BirdNeuralNetwork extends NeuralNetwork {
+    // BAD CODING: utilizes index which should be unknown to this
     constructor(index) {
       super(3, 8, 1);
       this.index = index;

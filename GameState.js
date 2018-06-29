@@ -61,35 +61,10 @@ class GameState extends State {
     this.step();
   }
 
-  pause() {
-    pkey.press = () => this.resume();
-    let gray_bg = new PIXI.Graphics();
-    gray_bg.beginFill(0x000000);
-    gray_bg.drawRect(0, 0, APPWIDTH, APPHEIGHT);
-    gray_bg.alpha = .6;
-    gray_bg.delete_on_resume = true;
-    this.game_container.addChild(gray_bg);
-    app.ticker.update();
-
-    app.ticker.stop();
-  }
-
-  resume() {
-    // delete all gray backgrounds
-    for (let i = 0; i < this.game_container.children.length; ++i) {
-      let obj = this.game_container.children[i];
-      if (obj.delete_on_resume === true) {
-        this.game_container.removeChildAt(i);
-        --i;
-      }
-    }
-    pkey.press = () => this.pause();
-    app.ticker.start();
-  }
-
   init() {
     rkey.press = () => this.reset();
     pkey.press = () => this.pause();
+    esckey.press = () => this.pause();
 
     for (let i = 0; i < BIRDCOUNT; ++i) {
       this.bird_man.add(
@@ -300,6 +275,44 @@ class GameState extends State {
     }
   }
 
+  
+  pause() {
+    pkey.press = () => this.resume();
+    esckey.press = () => this.resume();
+
+    let pause_menu = new PauseMenu(APPWIDTH, APPHEIGHT);
+    pause_menu.delete_on_resume = true;
+    // BAD CODE
+    //pause_menu.resume_button.click = this.resume();
+    // SUPER BAD CODE BAD BAD BAD
+    /*
+    pause_menu.mm_button.click = () => {
+      state_machine.pop();
+      state_machine.push(main_menu_state);
+      main_menu_state.set_start_function(main_menu_link_fn);
+    }
+    */
+    this.game_container.addChild(pause_menu);
+
+    app.ticker.update();
+
+    app.ticker.stop();
+  }
+
+  resume() {
+    // delete all gray backgrounds
+    for (let i = 0; i < this.game_container.children.length; ++i) {
+      let obj = this.game_container.children[i];
+      if (obj.delete_on_resume === true) {
+        this.game_container.removeChildAt(i);
+        --i;
+      }
+    }
+    pkey.press = () => this.pause();
+    esckey.press = () => this.pause();
+    app.ticker.start();
+  }
+
   add_initial_walls() {
     let end_of_stage =
       this.sim_stage.pivot.x + this.sim_stage.x + WALLINITIALX;
@@ -377,6 +390,7 @@ class GameState extends State {
   unbind_keys() {
     rkey.press = null;
     pkey.press = null;
+    esckey.press = null;
   }
 
   // sets the store in the html
